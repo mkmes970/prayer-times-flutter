@@ -126,6 +126,10 @@
     window.addEventListener('online', () => {
       registration.update().catch(() => {});
     });
+    window.addEventListener('focus', () => {
+      if (navigator.onLine) registration.update().catch(() => {});
+      offerUpdate();
+    });
   } catch (error) {
     console.warn('Could not prepare offline app files:', error);
   }

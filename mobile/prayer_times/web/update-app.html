@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123d2d">
+  <title>تحديث مواقيت الصلاة</title>
+  <style>
+    body{margin:0;background:#f5efdb;color:#123d2d;font:18px/1.8 system-ui,sans-serif;display:grid;place-items:center;min-height:100dvh}
+    main{max-width:36rem;padding:2rem;text-align:center}
+    button{background:#123d2d;color:#fff8e9;border:0;border-radius:12px;padding:14px 24px;font:inherit;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    p{margin:1rem 0}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>تحديث مواقيت الصلاة</h1>
+    <p>تحميل أحدث نسخة مع الاحتفاظ باسم المسجد والمنطقة والمواقيت والإعدادات المحفوظة في هذا المتصفح.</p>
+    <p>احفظ أي تعديلات مفتوحة في صفحة التطبيق قبل المتابعة.</p>
+    <button id="update" type="button">تحميل آخر تحديث</button>
+    <p id="status" role="status" aria-live="polite">يتطلب التحديث اتصالًا بالإنترنت. أبقِ الصفحة مفتوحة حتى يكتمل التحميل.</p>
+  </main>
+  <script src="update-app.js"></script>
+</body>
+</html>

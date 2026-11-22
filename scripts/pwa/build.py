@@ -81,6 +81,7 @@ def prepare(site: Path) -> dict:
         "index.html", "flutter.js", "flutter_bootstrap.js", "offline-setup.js",
         "offline-sw.js", "flutter_service_worker.js", "main.dart.js", "manifest.json",
         "install-app.js", "install-app.css",
+        "update-app.html", "update-app.js",
         "audio/adhan.mp3",
         "canvaskit/canvaskit.wasm",
     }
