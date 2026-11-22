@@ -1,0 +1,128 @@
+name: Build Prayer Times PWA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "mobile/prayer_times/**"
+      - "scripts/pwa/**"
+      - ".github/workflows/prayer-times-pwa.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prayer-times-pwa-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.0"
+          channel: stable
+          cache: true
+          cache-key: flutter-pwa-3.32.0-${{ runner.os }}-${{ hashFiles('mobile/prayer_times/pubspec.lock') }}
+      - name: Resolve public site path without publishing
+        shell: bash
+        env:
+          PWA_PUBLIC_REPOSITORY: ${{ vars.PWA_PUBLIC_REPOSITORY }}
+        run: |
+          set -euo pipefail
+          base="/"
+          if [[ -n "$PWA_PUBLIC_REPOSITORY" ]]; then
+            if [[ ! "$PWA_PUBLIC_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+              echo "::error::Invalid PWA_PUBLIC_REPOSITORY; expected owner/repo."
+              exit 1
+            fi
+            repo="${PWA_PUBLIC_REPOSITORY#*/}"
+            owner="${PWA_PUBLIC_REPOSITORY%/*}"
+            if [[ "${repo,,}" != "${owner,,}.github.io" ]]; then
+              base="/$repo/"
+            fi
+          fi
+          echo "PWA_BASE_HREF=$base" >> "$GITHUB_ENV"
+          echo "Build target path: $base"
+      - name: Get locked Flutter packages
+        working-directory: mobile/prayer_times
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze and test shared app
+        working-directory: mobile/prayer_times
+        run: |
+          flutter analyze
+          flutter test
+      - name: Build and verify offline-ready web site
+        run: |
+          python3 scripts/pwa/build.py \
+            --base-href "$PWA_BASE_HREF" \
+            --output generated-artifacts/pwa-site
+          python3 -m unittest discover -s scripts/pwa -p 'test_*.py'
+          node --test scripts/pwa/test_worker.cjs scripts/pwa/test_install.cjs
+      - name: Store compiled files privately for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: prayer-times-pwa-site
+          path: generated-artifacts/pwa-site/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  # No public repo is created by this workflow. Publishing is blocked until
+  # the owner explicitly configures the dedicated target and approval flag.
+  publish:
+    needs: build
+    if: ${{ vars.PWA_PUBLISH_APPROVED == 'true' && vars.PWA_PUBLIC_REPOSITORY != '' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: prayer-times-pwa-site
+          path: site
+      - name: Publish compiled site to approved dedicated repository
+        shell: bash
+        env:
+          PWA_PUBLIC_REPOSITORY: ${{ vars.PWA_PUBLIC_REPOSITORY }}
+          PWA_PUBLISH_TOKEN: ${{ secrets.PWA_PUBLISH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$PWA_PUBLIC_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ||
+                -z "$PWA_PUBLISH_TOKEN" ]]; then
+            echo "::error::Dedicated public repository or its write-only token is not configured."
+            exit 1
+          fi
+          if [[ ! -f site/offline-sw.js || ! -f site/.nojekyll ||
+                ! -f site/main.dart.js ]]; then
+            echo "::error::The compiled web release is incomplete."
+            exit 1
+          fi
+          cat > "$RUNNER_TEMP/pwa-askpass" <<'EOF'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$PWA_PUBLISH_TOKEN" ;;
+          esac
+          EOF
+          chmod 700 "$RUNNER_TEMP/pwa-askpass"
+          export GIT_ASKPASS="$RUNNER_TEMP/pwa-askpass" GIT_TERMINAL_PROMPT=0
+          git clone --depth=1 "https://github.com/$PWA_PUBLIC_REPOSITORY.git" target
+          if [[ ! -f target/.pwa-publish-target ]]; then
+            echo "::error::Target is not marked as a dedicated PWA-only repository."
+            exit 1
+          fi
+          # Only a previously approved, explicitly marked PWA-only repository
+          # can have its old compiled release replaced.
+          find target -mindepth 1 -maxdepth 1 \
+            ! -name .git ! -name .github \
+            ! -name .pwa-publish-target -exec rm -rf -- {} +
+          cp -a site/. target/
+          git -C target add -A
+          if git -C target diff --cached --quiet; then
+            echo "No PWA changes to publish."
+            exit 0
+          fi
+          git -C target -c user.name='Prayer Times PWA' \
+            -c user.email='actions@users.noreply.github.com' \
+            commit -m 'Update compiled web app'
+          git -C target push origin HEAD

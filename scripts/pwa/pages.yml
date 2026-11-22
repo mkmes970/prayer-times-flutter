@@ -1,0 +1,60 @@
+name: Deploy compiled PWA to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify every compiled web resource
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path(".")
+          entries = json.loads((root / "release-files.json").read_text())
+          allowed = {e["path"] for e in entries} | {
+              "release-files.json", ".nojekyll", ".pwa-publish-target",
+              ".github/workflows/pages.yml", "README.md",
+          }
+          for entry in entries:
+              path = root / entry["path"]
+              if path.is_absolute() or ".." in path.parts:
+                  raise SystemExit("Unsafe release path")
+              data = path.read_bytes()
+              if len(data) != entry["size"] or hashlib.sha256(data).hexdigest() != entry["sha256"]:
+                  raise SystemExit(f"Incomplete/corrupt asset: {path}")
+          for path in root.rglob("*"):
+              if ".git" in path.parts or not path.is_file():
+                  continue
+              if path.as_posix() not in allowed:
+                  raise SystemExit(f"Unexpected public file: {path}")
+          if any(root.rglob("*.dart")) or any(root.rglob("*.map")):
+              raise SystemExit("Private source/debug files must not be published")
+          print(f"Verified {len(entries)} compiled web resources")
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Publish verified compiled site
+        id: deployment
+        uses: actions/deploy-pages@v4

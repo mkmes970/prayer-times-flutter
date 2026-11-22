@@ -1,0 +1,767 @@
+.prayer-settings-backdrop {
+  position: fixed;
+  z-index: 2147483200;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 18px;
+  background: rgba(20, 35, 29, .64);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  direction: rtl;
+  font-family: "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  color: #233d31;
+}
+
+.prayer-settings-dialog,
+.prayer-settings-dialog * {
+  box-sizing: border-box;
+}
+
+.prayer-settings-dialog {
+  position: relative;
+  width: min(100%, 760px);
+  max-height: calc(100cqh - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px clamp(18px, 4vw, 38px) 17px;
+  border: 1px solid #d3c49d;
+  border-radius: 18px;
+  outline: none;
+  background:
+    radial-gradient(ellipse at 92% 0%, rgba(222, 205, 160, .19), transparent 34%),
+    #fff9ed;
+  box-shadow: 0 24px 80px rgba(12, 28, 22, .38), inset 0 0 0 4px rgba(255, 255, 255, .46);
+  scrollbar-color: #a7986d #f3ecd9;
+}
+
+.prayer-settings-dialog:focus-visible {
+  outline: 3px solid #7e714c;
+  outline-offset: 3px;
+}
+
+.prayer-settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5dcc7;
+}
+
+.prayer-settings-eyebrow {
+  margin: 0 0 2px;
+  color: #8a713a;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.prayer-settings-header h2 {
+  margin: 0;
+  color: #173d31;
+  font-size: clamp(27px, 5vw, 34px);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.prayer-settings-close {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #d7c99e;
+  border-radius: 50%;
+  color: #315447;
+  background: #fffdf7;
+  font: inherit;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.prayer-settings-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.prayer-settings-intro {
+  margin: 10px 0 4px;
+  color: #617166;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.ps-form-content {
+  display: grid;
+  gap: 10px;
+}
+
+.ps-section {
+  min-width: 0;
+  padding: 18px 19px 19px;
+  border: 1px solid #e5dcc8;
+  border-radius: 13px;
+  background: rgba(255, 254, 249, .74);
+}
+
+.ps-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+
+.ps-section-mark {
+  width: 4px;
+  min-height: 36px;
+  flex: 0 0 4px;
+  border-radius: 4px;
+  background: #b9974c;
+}
+
+.ps-section-heading h3 {
+  margin: -3px 0 0;
+  color: #214533;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.ps-section-heading p {
+  margin: 1px 0 0;
+  color: #777968;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ps-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  margin-top: 11px;
+  color: #365444;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ps-field input:not([type="range"]),
+.ps-field select,
+.ps-field textarea,
+.ps-time-field input,
+.ps-minute-field input,
+.ps-number-unit input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid #d9ceb2;
+  border-radius: 8px;
+  color: #243f32;
+  background: #fffefa;
+  font: 16px "Amiri", "Noto Naskh Arabic", Georgia, serif;
+}
+
+.ps-field textarea {
+  resize: vertical;
+  direction: ltr;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+
+.ps-field input:focus-visible,
+.ps-field select:focus-visible,
+.ps-field textarea:focus-visible,
+.ps-time-field input:focus-visible,
+.ps-minute-field input:focus-visible,
+.ps-number-unit input:focus-visible,
+.prayer-settings-dialog button:focus-visible {
+  outline: 3px solid rgba(150, 117, 44, .48);
+  outline-offset: 2px;
+}
+
+.ps-fixed-title {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  color: #58685a;
+  background: #f4efdf;
+}
+
+.ps-fixed-title strong {
+  color: #203f31;
+  font-size: 17px;
+}
+
+.ps-fixed-title small {
+  grid-column: 1 / -1;
+  color: #8a826e;
+  font-size: 12px;
+}
+
+.ps-region-actions,
+.ps-inline-add,
+.ps-backup-actions {
+  display: flex;
+  align-items: end;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.ps-inline-add .ps-field {
+  flex: 1;
+}
+
+.ps-button {
+  min-height: 41px;
+  padding: 7px 13px;
+  border: 1px solid #c9bea1;
+  border-radius: 8px;
+  font: 700 15px/1.25 "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+.ps-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ps-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.ps-primary {
+  border-color: #17432e;
+  color: #fff6dc;
+  background: #17432e;
+}
+
+.ps-primary:hover:not(:disabled) {
+  background: #23573d;
+}
+
+.ps-secondary {
+  color: #345341;
+  background: #f8f4e8;
+}
+
+.ps-secondary:hover:not(:disabled) {
+  background: #eee8d6;
+}
+
+.ps-danger {
+  border-color: #d7b5a7;
+  color: #883d32;
+  background: #fff7f1;
+}
+
+.ps-hint {
+  margin: 9px 0 0;
+  color: #737666;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ps-callout {
+  margin: 11px 0 0;
+  padding: 10px 12px;
+  border-inline-start: 3px solid #b9974c;
+  border-radius: 5px 8px 8px 5px;
+  color: #59634e;
+  background: #f3eedc;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ps-time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ps-time-field {
+  display: grid;
+  grid-template-columns: minmax(112px, 1fr) minmax(112px, 135px);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid #e8dfcb;
+  border-radius: 8px;
+  color: #294b3b;
+  background: #fffdf7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ps-time-field input {
+  direction: ltr;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.ps-minute-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ps-minute-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 52px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid #e7deca;
+  border-radius: 8px;
+  background: #fffdf7;
+  color: #294b3b;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ps-minute-field > span:first-child {
+  white-space: nowrap;
+}
+
+.ps-number-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: #718072;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.ps-number-unit input {
+  width: 65px;
+  min-height: 35px;
+  padding: 4px;
+  direction: ltr;
+  text-align: center;
+  font-family: "Amiri", "Noto Naskh Arabic", Georgia, serif;
+}
+
+.ps-number-unit small {
+  white-space: nowrap;
+}
+
+.ps-duration-pair,
+.ps-hijri-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ps-duration-pair .ps-field {
+  margin-top: 0;
+}
+
+.ps-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 59px;
+  padding: 9px 2px;
+  border-bottom: 1px solid #eee7d7;
+  cursor: pointer;
+}
+
+.ps-switch-copy {
+  display: grid;
+  gap: 1px;
+}
+
+.ps-switch-copy strong {
+  color: #2e4c3b;
+  font-size: 16px;
+}
+
+.ps-switch-copy small {
+  color: #777968;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.ps-switch-row input[type="checkbox"] {
+  position: relative;
+  width: 44px;
+  height: 25px;
+  flex: 0 0 44px;
+  margin: 0;
+  appearance: none;
+  border: 1px solid #b8b29c;
+  border-radius: 20px;
+  background: #e7e1d0;
+  cursor: pointer;
+  transition: background-color .16s ease;
+}
+
+.ps-switch-row input[type="checkbox"]::after {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fffdf8;
+  box-shadow: 0 1px 3px rgba(33, 44, 32, .25);
+  content: "";
+  transition: transform .16s ease;
+}
+
+.ps-switch-row input[type="checkbox"]:checked {
+  border-color: #17432e;
+  background: #17432e;
+}
+
+.ps-switch-row input[type="checkbox"]:checked::after {
+  transform: translateX(-19px);
+}
+
+.ps-switch-row input[type="checkbox"]:focus-visible,
+.ps-colors input:focus-visible,
+.ps-range-line input:focus-visible {
+  outline: 3px solid rgba(150, 117, 44, .5);
+  outline-offset: 3px;
+}
+
+.ps-disabled-row {
+  cursor: not-allowed;
+  opacity: .7;
+}
+
+.ps-disabled-row input {
+  cursor: not-allowed !important;
+}
+
+.ps-offset-field {
+  margin-top: 15px;
+}
+
+.ps-range-line {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 31px;
+}
+
+.ps-range-line input[type="range"] {
+  flex: 1;
+  accent-color: #315840;
+}
+
+.ps-range-line output {
+  min-width: 49px;
+  color: #607060;
+  font-size: 14px;
+  text-align: center;
+}
+
+.ps-colors {
+  display: flex;
+  gap: 12px;
+  margin: 15px 0 0;
+  padding: 10px 0 0;
+  border: 0;
+}
+
+.ps-colors legend {
+  margin-bottom: 7px;
+  color: #365444;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ps-color-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #727363;
+  font: 12px ui-monospace, SFMono-Regular, Consolas, monospace;
+  direction: ltr;
+  cursor: pointer;
+}
+
+.ps-color-choice input {
+  accent-color: #17432e;
+}
+
+.ps-color-choice > span {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #fffdf8;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #bdb49c;
+}
+
+.ps-backup-actions > * {
+  flex: 1;
+}
+
+.ps-file-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ps-file-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.ps-text-button {
+  margin-top: 9px;
+  padding: 4px 0;
+  border: 0;
+  color: #315840;
+  background: transparent;
+  font: 700 14px "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ps-paste-box {
+  padding: 8px 10px 11px;
+  border-radius: 9px;
+  background: #f7f1e3;
+}
+
+.ps-paste-box .ps-button {
+  margin-top: 9px;
+}
+
+.ps-reset-button {
+  margin-top: 2px;
+}
+
+.prayer-settings-storage,
+.prayer-settings-error {
+  margin: 11px 0 0;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.prayer-settings-storage {
+  color: #3f5949;
+  background: #e8eddf;
+}
+
+.prayer-settings-error {
+  color: #7c2e27;
+  background: #f8e5de;
+}
+
+.prayer-settings-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.ps-top-actions {
+  display: flex;
+  gap: 9px;
+  margin: 10px 0 13px;
+}
+
+.ps-top-actions button {
+  min-height: 38px;
+  padding: 5px 13px;
+  border-radius: 8px;
+  font: 700 15px/1.2 "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  cursor: pointer;
+}
+
+.ps-top-actions .prayer-settings-cancel {
+  flex-basis: 27%;
+}
+
+.prayer-settings-actions button {
+  min-height: 46px;
+  padding: 7px 16px;
+  border-radius: 9px;
+  font: 700 17px/1.2 "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  cursor: pointer;
+}
+
+.prayer-settings-cancel {
+  flex: 0 0 32%;
+  border: 1px solid #bcb28f;
+  color: #345143;
+  background: transparent;
+}
+
+.prayer-settings-save {
+  flex: 1;
+  border: 1px solid #153d2d;
+  color: #fff4d5;
+  background: #17432f;
+  box-shadow: inset 0 1px rgba(255, 255, 255, .13);
+}
+
+.prayer-settings-cancel:hover {
+  background: rgba(222, 214, 184, .35);
+}
+
+.prayer-settings-save:hover:not(:disabled) {
+  background: #21583d;
+}
+
+.ps-sticky-actions {
+  position: sticky;
+  bottom: -17px;
+  z-index: 2;
+  margin-inline: calc(clamp(18px, 4vw, 38px) * -1);
+  padding: 12px clamp(18px, 4vw, 38px);
+  border-top: 1px solid #e4dac2;
+  background: rgba(255, 249, 237, .96);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.prayer-settings-browser-note {
+  margin: 9px 0 0;
+  color: #777966;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.ps-modal-scrim {
+  position: fixed;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(20, 35, 29, .38);
+}
+
+.ps-small-modal {
+  width: min(100%, 410px);
+  padding: 20px;
+  border: 1px solid #d3c49d;
+  border-radius: 13px;
+  background: #fff9ed;
+  box-shadow: 0 18px 60px rgba(12, 28, 22, .25);
+}
+
+.ps-small-modal h3 {
+  margin: 0 0 10px;
+  color: #214533;
+  font-size: 21px;
+}
+
+.ps-small-modal .ps-region-actions {
+  justify-content: flex-end;
+}
+
+.ps-pin-gate {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+@media (max-width: 620px) {
+  .prayer-settings-backdrop {
+    align-items: flex-start;
+    padding: 8px;
+  }
+
+  .prayer-settings-dialog {
+    width: 100%;
+    max-height: calc(100cqh - 36px);
+    padding: 17px 14px 12px;
+    border-radius: 14px;
+  }
+
+  .ps-section {
+    padding: 14px 12px;
+  }
+
+  .ps-time-grid,
+  .ps-duration-pair,
+  .ps-hijri-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-time-field {
+    grid-template-columns: minmax(112px, 1fr) minmax(112px, 145px);
+  }
+
+  .ps-sticky-actions {
+    bottom: -12px;
+    margin-inline: -14px;
+    padding-inline: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+  .ps-minute-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-region-actions,
+  .ps-inline-add,
+  .ps-backup-actions {
+    flex-wrap: wrap;
+  }
+
+  .ps-inline-add .ps-field {
+    flex: 1 1 100%;
+  }
+
+  .ps-inline-add .ps-button {
+    width: 100%;
+  }
+}
+
+@container (max-height: 520px) {
+  .prayer-settings-backdrop {
+    align-items: flex-start;
+    padding-block: 6px;
+  }
+
+  .prayer-settings-dialog {
+    max-height: calc(100cqh - 12px);
+    padding-block: 12px 10px;
+  }
+
+  .ps-section {
+    padding-block: 12px;
+  }
+
+  .prayer-settings-intro {
+    margin-block: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prayer-settings-dialog *,
+  .prayer-settings-dialog *::before,
+  .prayer-settings-dialog *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

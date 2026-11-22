@@ -1,0 +1,62 @@
+name: prayer_times
+description: تطبيق أندرويد محلي لعرض مواقيت الصلاة والإقامة للمساجد.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  crypto: ^3.0.6
+  file_picker: ^10.2.0
+  path_provider: ^2.1.5
+  wakelock_plus: ^1.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: AdhkarNaskh
+      fonts:
+        - asset: assets/fonts/NotoNaskhArabic-Bold.ttf
+          weight: 700
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+        - asset: assets/fonts/Amiri-Bold.ttf
+          weight: 700
+  assets:
+    - assets/themes/
+    - assets/data/evening-adhkar.txt
+    - assets/data/morning-adhkar.txt
+    - assets/images/no-phone.png
+    - assets/data/prayer-times-template.json
+    - assets/data/hawd6-prayer-times.json
+    - assets/data/al-abbasi-prayer-times.json
+    - assets/data/dhuwaib-prayer-times.json
+    - assets/data/hawija-prayer-times.json
+    - assets/data/tikrit-prayer-times.json
+    - assets/data/baggara-prayer-times.json
+    - assets/data/shajara-prayer-times.json
+    - assets/data/alam-prayer-times.json
+    - assets/data/numaysa-prayer-times.json
+    - assets/data/tal-ali-prayer-times.json
+    - assets/data/zab-prayer-times.json
+    - assets/data/dua-ticker.json
+    - assets/data/post-prayer-adhkar.json
+    - assets/data/dashboard-hadiths.json
+    - assets/data/ramadan-hadiths.json
+    - assets/data/abu-hurayra-50-hadiths.json
+    - assets/data/pdf-hadiths-100.json
+    - assets/data/pdf-hadiths-600.json
+    - assets/data/adhan-hadiths.json
+    - assets/data/adhan-explanations.json
+    - assets/data/daily-hadiths-from-images.json

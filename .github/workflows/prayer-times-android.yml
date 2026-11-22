@@ -1,0 +1,111 @@
+name: Build Prayer Times Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "mobile/prayer_times/**"
+      - "scripts/bootstrap-prayer-times-android.sh"
+      - "scripts/test-prayer-times-smoke.sh"
+      - ".github/workflows/prayer-times-android.yml"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    # This hosted image already includes Android SDK command-line/build tools.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Use preinstalled Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [[ -z "$sdk_root" || ! -d "$sdk_root" ]]; then
+            echo "::error::The hosted runner's preinstalled Android SDK was not found."
+            exit 1
+          fi
+          if [[ ! -x "$sdk_root/cmdline-tools/latest/bin/sdkmanager" ]]; then
+            echo "::error::Android command-line tools are missing from $sdk_root."
+            exit 1
+          fi
+          {
+            printf 'ANDROID_HOME=%s\n' "$sdk_root"
+            printf 'ANDROID_SDK_ROOT=%s\n' "$sdk_root"
+          } >> "$GITHUB_ENV"
+          {
+            printf '%s/cmdline-tools/latest/bin\n' "$sdk_root"
+            printf '%s/platform-tools\n' "$sdk_root"
+          } >> "$GITHUB_PATH"
+          java -version
+          echo "Using preinstalled Android SDK: $sdk_root"
+          echo "Installed Android build components:"
+          find "$sdk_root/platforms" "$sdk_root/build-tools" "$sdk_root/ndk" \
+            -mindepth 1 -maxdepth 1 -type d -print
+      - uses: subosito/flutter-action@v2
+        with:
+          # Match the SDK used to verify analyze and tests locally.
+          flutter-version: "3.32.0"
+          channel: stable
+          cache: true
+          cache-key: flutter-3.32.0-${{ runner.os }}-${{ hashFiles('mobile/prayer_times/pubspec.lock') }}
+      - name: Configure Flutter Android SDK
+        run: flutter config --android-sdk "$ANDROID_HOME"
+      - name: Generate Android platform files
+        run: bash scripts/bootstrap-prayer-times-android.sh
+      - name: Get Flutter packages
+        working-directory: mobile/prayer_times
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze
+        working-directory: mobile/prayer_times
+        run: flutter analyze
+      - name: Unit tests
+        working-directory: mobile/prayer_times
+        run: flutter test
+      - name: Dart and Flutter regression checks
+        run: bash scripts/test-prayer-times-smoke.sh
+      - name: Build release APK
+        working-directory: mobile/prayer_times
+        run: flutter build apk --release --no-pub
+      - name: Build release App Bundle
+        working-directory: mobile/prayer_times
+        run: flutter build appbundle --release --no-pub
+      - name: Remove previous Android package artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              },
+            );
+            const previous = artifacts.filter(
+              (artifact) => artifact.name === 'prayer-times-android-release',
+            );
+            core.info(`Removing ${previous.length} previous Android package artifact(s).`);
+            for (const artifact of previous) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+            }
+      - name: Upload Android packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: prayer-times-android-release
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            mobile/prayer_times/build/app/outputs/flutter-apk/app-release.apk
+            mobile/prayer_times/build/app/outputs/bundle/release/app-release.aab

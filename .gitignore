@@ -1,0 +1,89 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/
+
+# Flutter / Dart app
+mobile/prayer_times/.dart_tool/
+mobile/prayer_times/.flutter-plugins
+mobile/prayer_times/.flutter-plugins-dependencies
+mobile/prayer_times/build/
+mobile/prayer_times/android/.gradle/
+mobile/prayer_times/android/local.properties
+mobile/prayer_times/android/app/.cxx/
+mobile/prayer_times/android/app/intermediates/
+mobile/prayer_times/android/app/outputs/
+
+# Generated previews and build output
+/generated-artifacts/
+
+# Secrets and local credentials (at any depth)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.netrc
+.npmrc
+.pypirc
+credentials.json
+service-account*.json
+service_account*.json
+id_rsa
+id_ed25519
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Android release signing: never commit private signing material
+*.jks
+*.keystore
+key.properties
+keystore.properties
+local.properties
