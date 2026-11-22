@@ -191,7 +191,7 @@ void main() {
           .load();
     });
     final repository = _Repository(
-      _data(_settings(7)),
+      _data(_settings(7).copyWith(tickerScrollingEnabled: true)),
     );
     final controller = PrayerController(
       repository: repository,
@@ -233,5 +233,73 @@ void main() {
       }
     }
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('long headings cannot shrink the clock, weekday or calendars',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    Rect visibleRect(Finder finder) {
+      final box = tester.renderObject<RenderBox>(finder);
+      return Rect.fromPoints(
+        box.localToGlobal(Offset.zero),
+        box.localToGlobal(box.size.bottomRight(Offset.zero)),
+      );
+    }
+
+    for (final size in [
+      const Size(1024, 465),
+      const Size(720, 360),
+      const Size(1920, 1080),
+    ]) {
+      tester.view.physicalSize = size;
+      List<Rect>? reference;
+      for (final settings in [
+        const AppSettings(mosqueName: 'مسجد'),
+        _settings(7),
+        const AppSettings(
+          mosqueName: 'مسجد الصحابي الجليل خالد بن الوليد رضي الله عنه الكبير',
+          mosqueNameLine2: 'خالد بن الوليد',
+          mosqueNameLine3: 'رضي الله عنه',
+        ),
+        const AppSettings(mosqueNameLine3: 'رضي الله عنه'),
+      ]) {
+        final controller = PrayerController(
+          repository: _Repository(
+              _data(settings.copyWith(tickerScrollingEnabled: true))),
+          deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
+        );
+        await tester.runAsync(controller.initialize);
+        await tester.pumpWidget(PrayerTimesApp(controller: controller));
+        await tester.pump();
+        final readout = find.byKey(const ValueKey('dashboard-clock-calendars'));
+        final texts = find.descendant(of: readout, matching: find.byType(Text));
+        final rects = texts.evaluate().map((element) {
+          return visibleRect(find.byWidget(element.widget));
+        }).toList();
+        if (reference == null) {
+          reference = rects;
+          // At the reference phone size the clock is genuinely large on
+          // screen, not merely a large font inside a shrunken parent.
+          if (size.width == 1024) {
+            expect(rects.first.height, greaterThan(38));
+          }
+        } else {
+          expect(rects.length, reference.length);
+          for (var i = 0; i < rects.length; i++) {
+            expect(rects[i].top, closeTo(reference[i].top, 0.01));
+            expect(rects[i].height, closeTo(reference[i].height, 0.01));
+          }
+        }
+        final heading = visibleRect(find.byType(MosqueHeading));
+        expect(heading.top, greaterThanOrEqualTo(0));
+        expect(heading.bottom, lessThanOrEqualTo(rects.first.top));
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        controller.dispose();
+      }
+    }
   });
 }

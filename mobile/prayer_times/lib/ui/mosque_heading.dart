@@ -18,23 +18,30 @@ class MosqueHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     final nameLines = settings.mosqueNameLines;
     final lines = nameLines.isEmpty ? [settings.appName] : nameLines;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final line in lines)
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              englishDigits(line),
-              textAlign: TextAlign.center,
-              textDirection: TextDirection.rtl,
-              maxLines: 1,
-              softWrap: false,
-              style: style,
-            ),
-          ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final line in lines)
+            if (constraints.hasBoundedHeight)
+              Flexible(child: _line(line))
+            else
+              _line(line),
+        ],
+      ),
     );
   }
+
+  Widget _line(String line) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          englishDigits(line),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.rtl,
+          maxLines: 1,
+          softWrap: false,
+          style: style,
+        ),
+      );
 }

@@ -485,24 +485,12 @@ class _MainInformation extends StatelessWidget {
     final labelSize =
         compact ? math.min(mq.width * 0.031, mq.height * 0.068) : 27.0;
 
+    // Only this readout can adapt to the screen's height. The mosque heading
+    // has its own remaining space and can never shrink the clock or calendars.
     final information = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Transform.translate(
-          offset: Offset(0, -mq.height * 0.012),
-          child: MosqueHeading(
-            settings: controller.settings,
-            style: TextStyle(
-              color: pine,
-              fontSize: headingSize * scale,
-              fontWeight: FontWeight.bold,
-              height: 1.6,
-              shadows: const [],
-            ),
-          ),
-        ),
-        const SizedBox(height: 2),
         Text(
           _formatClock(
             now,
@@ -529,15 +517,14 @@ class _MainInformation extends StatelessWidget {
             height: 1,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         _GregorianDateLabel(
           parts: gregorianParts,
           compact: compact,
           scale: scale,
           palette: palette,
         ),
-        if (controller.settings.showHijriDate)
-          SizedBox(height: mq.height * 0.025),
+        if (controller.settings.showHijriDate) const SizedBox(height: 6),
         if (controller.settings.showHijriDate)
           _HijriDateLabel(
             date: hijri,
@@ -597,19 +584,43 @@ class _MainInformation extends StatelessWidget {
     final morningEnd = sunriseAt;
     final fridayMode = isFridayHadithWindow(now,
         morningEndsAt: sunriseAt, dhuhrAt: timeAt('dhuhr'));
-    final informationPanel = LayoutBuilder(
-      builder: (context, constraints) => Align(
-        alignment: Alignment.bottomCenter,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: mq.height * 0.03),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              width: constraints.maxWidth,
-              child: information,
+    final informationPanel = Padding(
+      padding: EdgeInsets.only(bottom: mq.height * 0.015),
+      child: LayoutBuilder(
+        builder: (context, constraints) => Column(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: MosqueHeading(
+                  settings: controller.settings,
+                  style: TextStyle(
+                    color: pine,
+                    fontSize: headingSize * scale,
+                    fontWeight: FontWeight.bold,
+                    // Keep Amiri's dots and descenders inside each line while
+                    // using less inter-line space than the old whole-group fit.
+                    height: 1.4,
+                    shadows: const [],
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            ConstrainedBox(
+              key: const ValueKey('dashboard-clock-calendars'),
+              constraints:
+                  BoxConstraints(maxHeight: constraints.maxHeight * 0.65),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.bottomCenter,
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  child: information,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
