@@ -132,19 +132,21 @@ internal object PrayerSummaryNotificationManager {
         val target = correctedTarget
             ?.takeIf { activeStateIsCurrent }
             ?.minus(correctionMillis)
+        val refreshAt = nextStateAt?.minus(correctionMillis)
+
+        // Arm the replacement before publishing a countdown that can expire.
+        if (nextStateAt != null) scheduleRefresh(context, nextStateAt)
+        else cancelRefresh(context)
 
         try {
             notificationManager(context).notify(
                 NOTIFICATION_ID,
-                buildNotification(context, regionName, label, schedule, target),
+                buildNotification(context, regionName, label, schedule, target, refreshAt),
             )
         } catch (_: SecurityException) {
             cancelRefresh(context)
             return
         }
-
-        if (nextStateAt != null) scheduleRefresh(context, nextStateAt)
-        else cancelRefresh(context)
     }
 
     private fun findDailySchedule(config: JSONObject, date: String): JSONObject? {
@@ -167,6 +169,7 @@ internal object PrayerSummaryNotificationManager {
         label: String,
         schedule: JSONObject?,
         targetMillis: Long?,
+        refreshAtMillis: Long?,
     ): Notification {
         val scheduleText = scheduleText(schedule)
         val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
@@ -212,6 +215,17 @@ internal object PrayerSummaryNotificationManager {
         bindCountdown(compact, label, targetMillis)
         bindCountdown(expanded, label, targetMillis)
         builder.setShowWhen(false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // SystemUI's Chronometer keeps counting below zero if a receiver is
+            // delayed. Expire this *instance* at its phase boundary; the alarm
+            // posts a fresh notification using the current persisted timeline.
+            val expiresAt = listOfNotNull(targetMillis, refreshAtMillis).minOrNull()
+            if (expiresAt != null) {
+                builder.setTimeoutAfter(
+                    (expiresAt - System.currentTimeMillis()).coerceAtLeast(1L),
+                )
+            }
+        }
         if (Build.VERSION.SDK_INT >= 24) {
             builder
                 .setCustomContentView(compact)
@@ -318,22 +332,33 @@ internal object PrayerSummaryNotificationManager {
             .getString(KEY_CONFIG, null)
             ?.let { runCatching { JSONObject(it).optLong("clockOffsetSeconds", 0L) }.getOrNull() }
             ?: 0L
-        val triggerAtMillis = correctedAtMillis - correction * 1000L
-        if (triggerAtMillis <= System.currentTimeMillis()) {
-            refresh(context)
-            return
-        }
+        // If the boundary passed while building the notification, deliver a
+        // fresh receiver callback instead of recursively posting an older state.
+        val triggerAtMillis = (correctedAtMillis - correction * 1000L)
+            .coerceAtLeast(System.currentTimeMillis() + 1L)
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val operation = refreshPendingIntent(context, PendingIntent.FLAG_UPDATE_CURRENT)
             ?: return
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            val exactAllowed = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
                 alarmManager.canScheduleExactAlarms()
-            ) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
+            if (exactAllowed) {
+                // Unlike allow-while-idle alarms, alarm-clock alarms are not
+                // subject to the idle delivery spacing between nearby phases.
+                // This is silent: only our receiver updates the notification.
+                val showIntent = context.packageManager
+                    .getLaunchIntentForPackage(context.packageName)
+                    ?.let {
+                        PendingIntent.getActivity(
+                            context,
+                            REQUEST_REFRESH,
+                            it,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                        )
+                    } ?: operation
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
                     operation,
                 )
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

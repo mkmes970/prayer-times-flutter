@@ -279,6 +279,54 @@ void main() {
     expect(afterDhuhrIqama['target'], '2026-06-10T15:00:00');
   });
 
+  test('every iqama boundary switches immediately to the next adhan', () async {
+    final summary = _RecordingSummaryService();
+    final controller = _controller(
+      data: AppData(
+        regions: {_region.id: _region},
+        selectedRegionId: _region.id,
+        settings: const AppSettings(
+          prayerSummaryEnabled: true,
+          clockOffsetSeconds: 23,
+          iqamaMinutes: {
+            'fajrSecond': 20,
+            'dhuhr': 15,
+            'asr': 15,
+            'maghrib': 5,
+            'isha': 15,
+          },
+        ),
+      ),
+      summary: summary,
+    );
+    await controller.initialize();
+    addTearDown(controller.disposeController);
+    final payload = summary.payloads.single;
+    expect(payload['clockOffsetSeconds'], 23);
+    final states = (payload['states']! as List).cast<Map>();
+    final cases = {
+      '2026-06-10T04:50:00': ['الظهر', '2026-06-10T12:00:00'],
+      '2026-06-10T12:15:00': ['العصر', '2026-06-10T15:00:00'],
+      '2026-06-10T15:15:00': ['المغرب', '2026-06-10T18:00:00'],
+      '2026-06-10T18:05:00': ['العشاء', '2026-06-10T19:30:00'],
+      '2026-06-10T19:45:00': ['الفجر الأول', '2026-06-11T04:11:00'],
+    };
+    for (final entry in cases.entries) {
+      final boundary = DateTime.parse(entry.key);
+      final before = controller.countdownStatus(
+        boundary.subtract(const Duration(milliseconds: 1)),
+      );
+      expect(before.kind, DashboardStatusKind.iqama);
+      final atBoundary = controller.countdownStatus(boundary);
+      expect(atBoundary.kind, DashboardStatusKind.nextEvent);
+      expect(atBoundary.label, entry.value.first);
+      expect(atBoundary.target, DateTime.parse(entry.value.last));
+      final state = states.firstWhere((state) => state['at'] == entry.key);
+      expect(state['label'], 'باقي لأذان ${entry.value.first}');
+      expect(state['target'], entry.value.last);
+    }
+  });
+
   test('Friday Dhuhr skips iqama countdown and clock correction is retained',
       () async {
     final summary = _RecordingSummaryService();
