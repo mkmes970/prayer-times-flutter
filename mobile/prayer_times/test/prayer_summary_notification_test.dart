@@ -179,6 +179,11 @@ void main() {
     );
     expect(current['label'], 'باقي لأذان الظهر');
     expect(current['target'], '2026-06-10T12:00:00');
+    final reminders = (payload['reminders']! as List).cast<Map>();
+    final upcomingDhuhr = reminders.first;
+    expect(upcomingDhuhr['prayerId'], 'dhuhr');
+    expect(upcomingDhuhr['at'], '2026-06-10T11:50:00');
+    expect(controller.settings.adhanEnabled, isFalse);
   });
 
   test('today schedule follows the corrected local date across midnight',
@@ -345,6 +350,11 @@ void main() {
       (state) => state['at'] == '2026-06-12T12:02:00',
     );
     expect(afterDhuhr['label'], 'باقي لأذان العصر');
+    final reminders = (payload['reminders']! as List).cast<Map>();
+    final dhuhrReminder = reminders.firstWhere(
+      (event) => event['key'] == '2026-06-12|dhuhr',
+    );
+    expect(dhuhrReminder['at'], '2026-06-12T11:52:00');
   });
 
   test('notification permission is requested only after a region is selected',

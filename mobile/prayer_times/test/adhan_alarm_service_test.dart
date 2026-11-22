@@ -5,6 +5,7 @@ import 'package:prayer_times/models/app_settings.dart';
 import 'package:prayer_times/models/prayer_schedule.dart';
 import 'package:prayer_times/services/adhan_alarm_service.dart';
 import 'package:prayer_times/services/local_repository.dart';
+import 'package:prayer_times/services/prayer_summary_notification_service.dart';
 import 'package:prayer_times/state/prayer_controller.dart';
 import 'package:prayer_times/ui/settings_screen.dart';
 
@@ -30,6 +31,13 @@ class _RecordingAlarms extends AdhanAlarmService {
   }) async {
     latest = data;
   }
+}
+
+// This file tests audio controls; do not wait on a real native notification
+// channel that does not exist in the Flutter widget-test host.
+class _UnsupportedSummary extends PrayerSummaryNotificationService {
+  @override
+  bool get isSupported => false;
 }
 
 void main() {
@@ -152,6 +160,7 @@ void main() {
     final controller = PrayerController(
       repository: repository,
       adhanAlarmService: alarms,
+      prayerSummaryNotificationService: _UnsupportedSummary(),
     );
     await tester.runAsync(controller.initialize);
     addTearDown(controller.dispose);

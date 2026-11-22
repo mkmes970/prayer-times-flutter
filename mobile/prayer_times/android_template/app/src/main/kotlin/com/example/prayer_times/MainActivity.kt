@@ -8,6 +8,7 @@ import android.os.Build
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.util.Log
 import java.util.TimeZone
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -93,12 +94,40 @@ class MainActivity : FlutterActivity() {
         try {
             val json = JSONObject(payloadJson)
             result.success(PrayerSummaryNotificationManager.sync(this, json))
+            if (json.optBoolean("enabled", false) &&
+                (json.optJSONArray("reminders")?.length() ?: 0) > 0
+            ) {
+                requestPrayerTimingAccessOnce()
+            }
         } catch (error: Exception) {
             result.error(
                 "prayer_summary_failed",
                 "Could not update prayer summary: ${error.message}",
                 null,
             )
+        }
+    }
+
+    private fun requestPrayerTimingAccessOnce() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            pendingAdhanRequest != null || pendingPrayerSummaryPermissionResult != null
+        ) return
+        val manager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (manager.canScheduleExactAlarms()) return
+        val prefs = getSharedPreferences("PrayerTimingAccess", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("requested", false)) return
+        try {
+            // Android's own permission page, shown once; no extra app toggle.
+            startActivityForResult(
+                Intent(
+                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    Uri.parse("package:$packageName"),
+                ),
+                REQUEST_PRAYER_TIMING_ACCESS,
+            )
+            prefs.edit().putBoolean("requested", true).apply()
+        } catch (error: Exception) {
+            Log.w("PrayerTimingAccess", "Could not open exact alarm settings.", error)
         }
     }
 
@@ -220,6 +249,11 @@ class MainActivity : FlutterActivity() {
     @Deprecated("Deprecated in Android, kept for exact-alarm settings callback.")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_PRAYER_TIMING_ACCESS) {
+            PrayerReminderScheduler.scheduleNext(this)
+            PrayerSummaryNotificationManager.refresh(this)
+            return
+        }
         if (requestCode != REQUEST_EXACT_ALARM_PERMISSION) return
         val request = pendingAdhanRequest ?: return
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -258,5 +292,6 @@ class MainActivity : FlutterActivity() {
         private const val REQUEST_NOTIFICATION_PERMISSION = 6401
         private const val REQUEST_EXACT_ALARM_PERMISSION = 6402
         private const val REQUEST_PRAYER_SUMMARY_PERMISSION = 6403
+        private const val REQUEST_PRAYER_TIMING_ACCESS = 6404
     }
 }

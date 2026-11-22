@@ -12,6 +12,7 @@ class BootReceiver : BroadcastReceiver() {
         when (action) {
             Intent.ACTION_BOOT_COMPLETED -> {
                 AdhanAlarmScheduler.scheduleNext(context)
+                PrayerReminderScheduler.scheduleNext(context)
                 PrayerSummaryNotificationManager.refresh(context)
                 maybeLaunchApp(context)
             }
@@ -21,6 +22,7 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_MY_PACKAGE_REPLACED,
             AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED -> {
                 AdhanAlarmScheduler.scheduleNext(context)
+                PrayerReminderScheduler.scheduleNext(context)
                 PrayerSummaryNotificationManager.refresh(context)
             }
         }

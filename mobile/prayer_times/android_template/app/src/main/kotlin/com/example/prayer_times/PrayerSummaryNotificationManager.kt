@@ -32,6 +32,7 @@ internal object PrayerSummaryNotificationManager {
     private const val DATE_PATTERN = "yyyy-MM-dd"
 
     fun sync(context: Context, config: JSONObject): Boolean {
+        PrayerReminderScheduler.sync(context, config)
         ensureChannel(context)
         val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         if (!config.optBoolean("enabled", false)) {

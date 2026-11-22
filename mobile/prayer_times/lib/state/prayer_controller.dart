@@ -18,6 +18,7 @@ import '../models/ramadan_schedule.dart';
 import '../services/hijri_date.dart';
 import '../services/adhan_alarm_service.dart';
 import '../services/prayer_summary_notification_service.dart';
+import '../services/prayer_reminder_schedule.dart';
 import '../services/local_repository.dart';
 import '../services/bundled_schedules.dart';
 
@@ -606,6 +607,7 @@ class PrayerController extends ChangeNotifier {
       'todaySchedule': todaySchedule,
       'dailySchedules': dailySchedules,
       'states': states,
+      'reminders': PrayerReminderSchedule.build(_data, now: _deviceNow()),
     };
   }
 

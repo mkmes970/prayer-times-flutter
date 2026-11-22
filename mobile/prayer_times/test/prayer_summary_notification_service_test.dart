@@ -31,6 +31,10 @@ void main() {
           (payload['states'] as List).first,
           containsPair('label', 'باقي لأذان الظهر'),
         );
+        expect(
+          (payload['reminders'] as List).first,
+          containsPair('prayerId', 'dhuhr'),
+        );
         return true;
       },
     );
@@ -55,6 +59,14 @@ void main() {
       ],
       'states': [
         {'label': 'باقي لأذان الظهر'},
+      ],
+      'reminders': [
+        {
+          'key': '2026-11-06|dhuhr',
+          'prayerId': 'dhuhr',
+          'at': '2026-11-06T11:45:00',
+          'adhanAt': '2026-11-06T11:55:00',
+        },
       ],
     });
 

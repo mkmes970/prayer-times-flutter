@@ -53,6 +53,10 @@
             android:name=".PrayerSummaryReceiver"
             android:enabled="true"
             android:exported="false" />
+        <receiver
+            android:name=".PrayerReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <service
             android:name=".AdhanPlaybackService"
             android:enabled="true"

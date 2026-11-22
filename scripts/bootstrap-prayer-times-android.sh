@@ -34,6 +34,10 @@ cp "$APP_DIR/android_template/app/src/main/kotlin/com/example/prayer_times/Praye
   android/app/src/main/kotlin/com/example/prayer_times/PrayerSummaryNotificationManager.kt
 cp "$APP_DIR/android_template/app/src/main/kotlin/com/example/prayer_times/PrayerSummaryReceiver.kt" \
   android/app/src/main/kotlin/com/example/prayer_times/PrayerSummaryReceiver.kt
+for source in PrayerReminderScheduler PrayerReminderNotification PrayerReminderReceiver; do
+  cp "$APP_DIR/android_template/app/src/main/kotlin/com/example/prayer_times/$source.kt" \
+    "android/app/src/main/kotlin/com/example/prayer_times/$source.kt"
+done
 # Copy after flutter create so its default Flutter icon cannot replace ours.
 cp -R "$APP_DIR/android_template/app/src/main/res/." android/app/src/main/res/
 echo "Android project files are ready in $APP_DIR/android."
