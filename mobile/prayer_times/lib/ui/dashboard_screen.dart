@@ -590,18 +590,22 @@ class _MainInformation extends StatelessWidget {
         builder: (context, constraints) => Column(
           children: [
             Expanded(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: MosqueHeading(
-                  settings: controller.settings,
-                  style: TextStyle(
-                    color: pine,
-                    fontSize: headingSize * scale,
-                    fontWeight: FontWeight.bold,
-                    // Keep Amiri's dots and descenders inside each line while
-                    // using less inter-line space than the old whole-group fit.
-                    height: 1.4,
-                    shadows: const [],
+              child: LayoutBuilder(
+                builder: (context, headingBounds) => OverflowBox(
+                  // Use some of the existing top padding for the name only;
+                  // the clock, dates, countdown and ticker do not move.
+                  alignment: Alignment.bottomCenter,
+                  minHeight: headingBounds.maxHeight + mq.height * 0.025,
+                  maxHeight: headingBounds.maxHeight + mq.height * 0.025,
+                  child: MosqueHeading(
+                    settings: controller.settings,
+                    style: TextStyle(
+                      color: pine,
+                      fontSize: headingSize * scale,
+                      fontWeight: FontWeight.bold,
+                      height: 1.05,
+                      shadows: const [],
+                    ),
                   ),
                 ),
               ),

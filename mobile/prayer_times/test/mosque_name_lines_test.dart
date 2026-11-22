@@ -83,8 +83,9 @@ void main() {
     );
   });
 
-  testWidgets('only populated fields become ordered, untruncated lines',
+  testWidgets('three fixed slots retain empty fields without truncation',
       (tester) async {
+    List<Rect>? originalSlots;
     for (var mask = 0; mask < 8; mask++) {
       final settings = _settings(mask);
       await tester.pumpWidget(MaterialApp(
@@ -109,6 +110,21 @@ void main() {
           expected.isEmpty ? [settings.appName] : expected);
       expect(shown.every((text) => text.overflow != TextOverflow.ellipsis),
           isTrue);
+      final slots = [
+        for (var index = 1; index <= 3; index++)
+          tester.getRect(find.byKey(ValueKey('mosque-heading-slot-$index'))),
+      ];
+      originalSlots ??= slots;
+      expect(slots, originalSlots);
+      for (var index = 0; index < 3; index++) {
+        final text = find.text(_lines[index]);
+        if (mask & (1 << index) != 0) {
+          // A line must occupy its own row, including when earlier rows are
+          // empty. Its baseline must not migrate to the first available row.
+          expect(
+              tester.getCenter(text).dy, closeTo(slots[index].center.dy, 0.01));
+        }
+      }
       for (var index = 1; index < shown.length; index++) {
         expect(
           tester.getTopLeft(find.text(shown[index].data!)).dy,
@@ -296,6 +312,11 @@ void main() {
         final heading = visibleRect(find.byType(MosqueHeading));
         expect(heading.top, greaterThanOrEqualTo(0));
         expect(heading.bottom, lessThanOrEqualTo(rects.first.top));
+        if (settings.mosqueName == _lines[0] && size.width == 1024) {
+          final firstLine = visibleRect(find.text(_lines[0]));
+          expect(firstLine.height, greaterThan(30));
+          expect(firstLine.top, lessThan(30));
+        }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
         controller.dispose();

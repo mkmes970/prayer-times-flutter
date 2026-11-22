@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
 import '../models/english_digits.dart';
 
-/// Each populated field occupies one centered line, without truncation.
+/// Three fixed slots: leaving a field empty never moves the other lines.
 class MosqueHeading extends StatelessWidget {
   const MosqueHeading({
     required this.settings,
@@ -16,22 +16,37 @@ class MosqueHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nameLines = settings.mosqueNameLines;
-    final lines = nameLines.isEmpty ? [settings.appName] : nameLines;
+    final lines = [
+      settings.mosqueName.trim(),
+      settings.mosqueNameLine2.trim(),
+      settings.mosqueNameLine3.trim(),
+    ];
+    if (lines.every((line) => line.isEmpty)) lines[0] = settings.appName;
     return LayoutBuilder(
       builder: (context, constraints) => Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize:
+            constraints.hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final line in lines)
+          for (var index = 0; index < lines.length; index++)
             if (constraints.hasBoundedHeight)
-              Flexible(child: _line(line))
+              Expanded(child: _slot(lines[index], index))
             else
-              _line(line),
+              SizedBox(
+                height: MediaQuery.textScalerOf(context)
+                        .scale(style.fontSize ?? 14) *
+                    (style.height ?? 1.4),
+                child: _slot(lines[index], index),
+              ),
         ],
       ),
     );
   }
+
+  Widget _slot(String line, int index) => SizedBox.expand(
+        key: ValueKey('mosque-heading-slot-${index + 1}'),
+        child: line.isEmpty ? null : _line(line),
+      );
 
   Widget _line(String line) => FittedBox(
         fit: BoxFit.scaleDown,
