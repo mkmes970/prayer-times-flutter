@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../models/friday_hadith_window.dart';
 import '../models/prayer_schedule.dart';
 import '../models/morning_adhkar.dart';
-import '../models/english_digits.dart';
 import '../services/date_format.dart';
 import '../services/countdown_format.dart';
 import '../services/hijri_date.dart';
@@ -18,6 +17,7 @@ import 'prayer_period_theme.dart';
 import 'settings_screen.dart';
 import 'theme_catalog.dart';
 import 'ramadan_screen.dart';
+import 'mosque_heading.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
@@ -473,9 +473,6 @@ class _MainInformation extends StatelessWidget {
     final pine = palette.ink;
     final scale = controller.settings.fontScale;
     final clockScale = controller.settings.clockScale;
-    final heading = controller.settings.mosqueName.isNotEmpty
-        ? controller.settings.mosqueName
-        : controller.settings.appName;
     final hijri = controller.hijriDateAt(now);
     final gregorianParts = formatGregorianDate(now).split('/');
     final mq = MediaQuery.sizeOf(context);
@@ -494,10 +491,8 @@ class _MainInformation extends StatelessWidget {
       children: [
         Transform.translate(
           offset: Offset(0, -mq.height * 0.012),
-          child: Text(
-            englishDigits(heading),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: MosqueHeading(
+            settings: controller.settings,
             style: TextStyle(
               color: pine,
               fontSize: headingSize * scale,
@@ -602,11 +597,20 @@ class _MainInformation extends StatelessWidget {
     final morningEnd = sunriseAt;
     final fridayMode = isFridayHadithWindow(now,
         morningEndsAt: sunriseAt, dhuhrAt: timeAt('dhuhr'));
-    final informationPanel = Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: mq.height * 0.03),
-        child: information,
+    final informationPanel = LayoutBuilder(
+      builder: (context, constraints) => Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: mq.height * 0.03),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.bottomCenter,
+            child: SizedBox(
+              width: constraints.maxWidth,
+              child: information,
+            ),
+          ),
+        ),
       ),
     );
     final panel = !showHadith

@@ -26,6 +26,8 @@ class AppSettings {
   const AppSettings({
     this.appName = 'مواقيت الصلاة',
     this.mosqueName = '',
+    this.mosqueNameLine2 = '',
+    this.mosqueNameLine3 = '',
     this.iqamaMinutes = defaultIqamaMinutes,
     this.prayerDurationMinutes = defaultPrayerDurationMinutes,
     this.postPrayerDhikrMinutes = 8,
@@ -67,6 +69,15 @@ class AppSettings {
 
   final String appName;
   final String mosqueName;
+  final String mosqueNameLine2;
+  final String mosqueNameLine3;
+
+  /// Keep the original field as line one for existing installations/backups.
+  List<String> get mosqueNameLines => [
+        mosqueName.trim(),
+        mosqueNameLine2.trim(),
+        mosqueNameLine3.trim(),
+      ].where((line) => line.isNotEmpty).toList(growable: false);
   final Map<String, int> iqamaMinutes;
   final Map<String, int> prayerDurationMinutes;
   final int? postPrayerDhikrMinutes;
@@ -110,6 +121,8 @@ class AppSettings {
   AppSettings copyWith({
     String? appName,
     String? mosqueName,
+    String? mosqueNameLine2,
+    String? mosqueNameLine3,
     Map<String, int>? iqamaMinutes,
     Map<String, int>? prayerDurationMinutes,
     int? postPrayerDhikrMinutes,
@@ -154,6 +167,8 @@ class AppSettings {
     return AppSettings(
       appName: appName ?? this.appName,
       mosqueName: mosqueName ?? this.mosqueName,
+      mosqueNameLine2: mosqueNameLine2 ?? this.mosqueNameLine2,
+      mosqueNameLine3: mosqueNameLine3 ?? this.mosqueNameLine3,
       iqamaMinutes: Map.unmodifiable(iqamaMinutes ?? this.iqamaMinutes),
       prayerDurationMinutes: Map.unmodifiable(
         prayerDurationMinutes ?? this.prayerDurationMinutes,
@@ -217,6 +232,8 @@ class AppSettings {
         'timingDefaultsVersion': 1,
         'appName': appName,
         'mosqueName': mosqueName,
+        'mosqueNameLine2': mosqueNameLine2,
+        'mosqueNameLine3': mosqueNameLine3,
         'iqamaMinutes': iqamaMinutes,
         'prayerDurationMinutes': prayerDurationMinutes,
         'postPrayerDhikrMinutes': postPrayerDhikrMinutes,
@@ -296,6 +313,8 @@ class AppSettings {
     return AppSettings(
       appName: text('appName', 'مواقيت الصلاة'),
       mosqueName: text('mosqueName', ''),
+      mosqueNameLine2: text('mosqueNameLine2', ''),
+      mosqueNameLine3: text('mosqueNameLine3', ''),
       iqamaMinutes: installTimingDefaults
           ? defaultIqamaMinutes
           : durations('iqamaMinutes'),

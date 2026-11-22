@@ -65,6 +65,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _appName;
   late final TextEditingController _mosqueName;
+  late final TextEditingController _mosqueNameLine2;
+  late final TextEditingController _mosqueNameLine3;
   late final TextEditingController _regionName;
   late final Map<String, TextEditingController> _iqamaFields;
   late final Map<String, TextEditingController> _prayerDurationFields;
@@ -98,6 +100,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _editDate = controller.now;
     _appName = TextEditingController(text: controller.settings.appName);
     _mosqueName = TextEditingController(text: controller.settings.mosqueName);
+    _mosqueNameLine2 =
+        TextEditingController(text: controller.settings.mosqueNameLine2);
+    _mosqueNameLine3 =
+        TextEditingController(text: controller.settings.mosqueNameLine3);
     _regionName = TextEditingController();
     _regionSelectionDraft = controller.selectedRegionId;
     _postPrayerDhikrField = TextEditingController(
@@ -145,6 +151,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     controller.previewDashboardLineColor(null);
     _appName.dispose();
     _mosqueName.dispose();
+    _mosqueNameLine2.dispose();
+    _mosqueNameLine3.dispose();
     _regionName.dispose();
     _postPrayerDhikrField.dispose();
     _fridayKhutbahField.dispose();
@@ -286,6 +294,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await controller.setAppAndMosqueName(
         appName: _appName.text,
         mosqueName: _mosqueName.text,
+        mosqueNameLine2: _mosqueNameLine2.text,
+        mosqueNameLine3: _mosqueNameLine3.text,
       );
       _message('تم حفظ الاسم.');
     } catch (error) {
@@ -578,6 +588,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _appName.text = controller.settings.appName;
       _mosqueName.text = controller.settings.mosqueName;
+      _mosqueNameLine2.text = controller.settings.mosqueNameLine2;
+      _mosqueNameLine3.text = controller.settings.mosqueNameLine3;
       for (final field in _iqamaFields.values) {
         field.clear();
       }
@@ -1001,9 +1013,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: _mosqueName,
+                key: const ValueKey('mosque-name-line-1'),
+                textInputAction: TextInputAction.next,
+                textDirection: TextDirection.rtl,
                 decoration: const InputDecoration(
-                  labelText: 'اسم المسجد',
-                  helperText: 'يظهر بدل «مواقيت الصلاة» في الواجهة الرئيسية.',
+                  labelText: 'اسم المسجد — السطر الأول',
+                  hintText: 'مثال: مسجد الصحابي',
+                  helperText: 'كل حقل اختياري؛ تظهر الأسطر المكتوبة فقط.',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _mosqueNameLine2,
+                key: const ValueKey('mosque-name-line-2'),
+                textInputAction: TextInputAction.next,
+                textDirection: TextDirection.rtl,
+                decoration: const InputDecoration(
+                  labelText: 'اسم المسجد — السطر الثاني',
+                  hintText: 'مثال: خالد بن الوليد',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _mosqueNameLine3,
+                key: const ValueKey('mosque-name-line-3'),
+                textInputAction: TextInputAction.done,
+                textDirection: TextDirection.rtl,
+                decoration: const InputDecoration(
+                  labelText: 'اسم المسجد — السطر الثالث',
+                  hintText: 'مثال: رضي الله عنه',
                 ),
               ),
               const SizedBox(height: 10),

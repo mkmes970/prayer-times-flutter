@@ -643,12 +643,16 @@ class PrayerController extends ChangeNotifier {
   Future<void> setAppAndMosqueName({
     required String appName,
     required String mosqueName,
+    String? mosqueNameLine2,
+    String? mosqueNameLine3,
   }) async {
     final name = appName.trim();
     await updateSettings(
       settings.copyWith(
         appName: name.isEmpty ? 'مواقيت الصلاة' : name,
         mosqueName: mosqueName.trim(),
+        mosqueNameLine2: mosqueNameLine2?.trim(),
+        mosqueNameLine3: mosqueNameLine3?.trim(),
       ),
     );
   }
