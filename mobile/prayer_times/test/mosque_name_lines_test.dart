@@ -144,6 +144,10 @@ void main() {
       final field = find.byKey(ValueKey('mosque-name-line-$index'));
       await tester.scrollUntilVisible(field, 400,
           scrollable: find.byType(Scrollable).first);
+      final input = tester.widget<TextField>(field);
+      expect(input.decoration?.hintText, isNull);
+      expect(input.decoration?.labelText,
+          ['السطر الأول', 'السطر الثاني', 'السطر الثالث'][index - 1]);
       await tester.enterText(field, value);
     }
 

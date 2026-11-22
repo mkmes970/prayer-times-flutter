@@ -1017,8 +1017,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 textInputAction: TextInputAction.next,
                 textDirection: TextDirection.rtl,
                 decoration: const InputDecoration(
-                  labelText: 'اسم المسجد — السطر الأول',
-                  hintText: 'مثال: مسجد الصحابي',
+                  labelText: 'السطر الأول',
                   helperText: 'كل حقل اختياري؛ تظهر الأسطر المكتوبة فقط.',
                 ),
               ),
@@ -1029,8 +1028,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 textInputAction: TextInputAction.next,
                 textDirection: TextDirection.rtl,
                 decoration: const InputDecoration(
-                  labelText: 'اسم المسجد — السطر الثاني',
-                  hintText: 'مثال: خالد بن الوليد',
+                  labelText: 'السطر الثاني',
                 ),
               ),
               const SizedBox(height: 10),
@@ -1040,8 +1038,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 textInputAction: TextInputAction.done,
                 textDirection: TextDirection.rtl,
                 decoration: const InputDecoration(
-                  labelText: 'اسم المسجد — السطر الثالث',
-                  hintText: 'مثال: رضي الله عنه',
+                  labelText: 'السطر الثالث',
                 ),
               ),
               const SizedBox(height: 10),
