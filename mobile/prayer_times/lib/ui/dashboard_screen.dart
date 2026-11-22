@@ -176,18 +176,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     CustomPaint(
                       painter: _MosquePainter(
                         palette,
-                        showLanterns: !(_hadithVisible &&
-                            controller.settings.hadithEnabled),
                         decorationsOnly: true,
                       ),
                     ),
                   ],
                 )
               else
-                _MosqueBackdrop(
-                    palette: palette,
-                    showLanterns:
-                        !(_hadithVisible && controller.settings.hadithEnabled)),
+                _MosqueBackdrop(palette: palette),
               SizedBox.expand(
                 child: LayoutBuilder(builder: (context, screenConstraints) {
                   final displayHeight = screenConstraints.maxWidth > 0
@@ -1042,15 +1037,14 @@ IconData _iconFor(String id) => switch (id) {
     };
 
 class _MosqueBackdrop extends StatelessWidget {
-  const _MosqueBackdrop({required this.palette, required this.showLanterns});
+  const _MosqueBackdrop({required this.palette});
 
   final PrayerPeriodPalette palette;
-  final bool showLanterns;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _MosquePainter(palette, showLanterns: showLanterns),
+      painter: _MosquePainter(palette),
       child: const SizedBox.expand(),
     );
   }
@@ -1059,12 +1053,10 @@ class _MosqueBackdrop extends StatelessWidget {
 class _MosquePainter extends CustomPainter {
   _MosquePainter(
     this.palette, {
-    required this.showLanterns,
     this.decorationsOnly = false,
   });
 
   final PrayerPeriodPalette palette;
-  final bool showLanterns;
   final bool decorationsOnly;
 
   @override
@@ -1242,7 +1234,6 @@ class _MosquePainter extends CustomPainter {
   }
 
   void _drawDecorations(Canvas canvas, Size size) {
-    final scale = math.min(size.width, size.height * 2);
     final ornament = Paint()..color = palette.accent.withValues(alpha: 0.75);
     for (final x in [size.width * 0.12, size.width * 0.88]) {
       canvas.drawCircle(Offset(x, size.height * 0.06), 2.5, ornament);
@@ -1250,20 +1241,6 @@ class _MosquePainter extends CustomPainter {
         Offset(x, size.height * 0.06),
         Offset(x, size.height * 0.20),
         ornament..strokeWidth = 1.3,
-      );
-    }
-    _drawFoliage(canvas, Offset(size.width * 0.065, size.height * 0.055), 1);
-    _drawFoliage(canvas, Offset(size.width * 0.965, size.height * 0.055), -1);
-    if (showLanterns) {
-      _drawLantern(
-        canvas,
-        Offset(size.width * 0.16, size.height * 0.025),
-        scale,
-      );
-      _drawLantern(
-        canvas,
-        Offset(size.width * 0.565, size.height * 0.025),
-        scale,
       );
     }
   }
@@ -1311,85 +1288,6 @@ class _MosquePainter extends CustomPainter {
         ).createShader(Rect.fromCircle(center: center, radius: radius));
       canvas.drawCircle(center, radius, sun);
     }
-  }
-
-  void _drawFoliage(Canvas canvas, Offset origin, double direction) {
-    final stemPaint = Paint()
-      ..color = const Color(0xFF597D5D).withValues(alpha: 0.7)
-      ..strokeWidth = 1.2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final leafPaint = Paint()
-      ..color = const Color(0xFF78966B).withValues(alpha: 0.76)
-      ..style = PaintingStyle.fill;
-    final stem = Path()
-      ..moveTo(origin.dx, origin.dy)
-      ..quadraticBezierTo(
-        origin.dx + direction * 28,
-        origin.dy + 20,
-        origin.dx + direction * 78,
-        origin.dy + 53,
-      );
-    canvas.drawPath(stem, stemPaint);
-    for (var index = 0; index < 6; index++) {
-      final t = (index + 1) / 7;
-      final center = Offset(origin.dx + direction * 76 * t, origin.dy + 52 * t);
-      for (final side in [-1.0, 1.0]) {
-        final leaf = Path()
-          ..moveTo(center.dx, center.dy)
-          ..quadraticBezierTo(
-            center.dx + direction * side * 15,
-            center.dy - 17,
-            center.dx + direction * side * 27,
-            center.dy - 12,
-          )
-          ..quadraticBezierTo(
-            center.dx + direction * side * 15,
-            center.dy + 1,
-            center.dx,
-            center.dy,
-          );
-        canvas.drawPath(leaf, leafPaint);
-      }
-    }
-  }
-
-  void _drawLantern(Canvas canvas, Offset anchor, double scale) {
-    final gold = Paint()
-      ..color = palette.accent.withValues(alpha: 0.88)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1, scale * 0.002);
-    final body = Paint()
-      ..color = const Color(0xFF986432).withValues(alpha: 0.92);
-    final width = scale * 0.036;
-    final height = scale * 0.075;
-    canvas.drawLine(anchor, Offset(anchor.dx, anchor.dy + height * 0.32), gold);
-    final shape = Path()
-      ..moveTo(anchor.dx - width * 0.20, anchor.dy + height * 0.30)
-      ..lineTo(anchor.dx - width * 0.38, anchor.dy + height * 0.46)
-      ..lineTo(anchor.dx - width * 0.30, anchor.dy + height * 0.90)
-      ..lineTo(anchor.dx, anchor.dy + height * 1.12)
-      ..lineTo(anchor.dx + width * 0.30, anchor.dy + height * 0.90)
-      ..lineTo(anchor.dx + width * 0.38, anchor.dy + height * 0.46)
-      ..lineTo(anchor.dx + width * 0.20, anchor.dy + height * 0.30)
-      ..close();
-    canvas.drawPath(shape, body);
-    canvas.drawPath(shape, gold);
-    canvas.drawLine(
-      Offset(anchor.dx - width * 0.27, anchor.dy + height * 0.47),
-      Offset(anchor.dx + width * 0.27, anchor.dy + height * 0.47),
-      gold,
-    );
-    canvas.drawLine(
-      Offset(anchor.dx - width * 0.25, anchor.dy + height * 0.82),
-      Offset(anchor.dx + width * 0.25, anchor.dy + height * 0.82),
-      gold,
-    );
-    canvas.drawCircle(
-      Offset(anchor.dx, anchor.dy + height * 0.64),
-      width * 0.11,
-      Paint()..color = palette.softGold.withValues(alpha: 0.9),
-    );
   }
 
   void _drawDome(
@@ -1504,7 +1402,6 @@ class _MosquePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MosquePainter oldDelegate) =>
       oldDelegate.palette != palette ||
-      oldDelegate.showLanterns != showLanterns ||
       oldDelegate.decorationsOnly != decorationsOnly;
 }
 

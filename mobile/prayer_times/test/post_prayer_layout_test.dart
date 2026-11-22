@@ -49,9 +49,22 @@ void main() {
             await rootBundle.loadString('assets/data/post-prayer-adhkar.json');
           });
           await tester.pumpAndSettle();
+          final clockFinder = find.byKey(const ValueKey('post-prayer-clock'));
+          final clock = tester.widget<Text>(clockFinder);
+          expect(clock.data, '6:00:00');
+          expect(clock.style!.color, const Color(0xFFC62828));
+          final titleBottom =
+              tester.getBottomLeft(find.text('اذكار بعد الصلاة')).dy;
+          expect(tester.getTopLeft(clockFinder).dy, greaterThan(titleBottom));
+          for (final entry in tester.widgetList<Text>(find.byType(Text))) {
+            if (entry.textSpan == null) continue;
+            expect(tester.getBottomLeft(find.byWidget(entry)).dy,
+                lessThanOrEqualTo(tester.getTopLeft(clockFinder).dy));
+          }
           expect(tester.takeException(), isNull,
               reason: '$screen, text scale $scale, prayer $prayer');
-          final texts = tester.renderObjectList<RenderBox>(find.byType(RichText));
+          final texts =
+              tester.renderObjectList<RenderBox>(find.byType(RichText));
           for (final text in texts) {
             final bounds = text.localToGlobal(Offset.zero) & text.size;
             expect(bounds.bottom, lessThanOrEqualTo(screen.height + 1));
@@ -61,6 +74,41 @@ void main() {
           }
         }
       }
+    }
+  });
+
+  testWidgets('post-prayer clock follows live time in 12-hour format',
+      (tester) async {
+    final start = DateTime(2026, 11, 22, 23, 59, 59);
+    final status = PrayerScreenStatus(
+      phase: PrayerScreenPhase.postPrayerDhikr,
+      label: '',
+      prayerId: 'isha',
+      startsAt: start,
+      endsAt: start.add(const Duration(minutes: 4)),
+    );
+    for (final time in [
+      start,
+      start.add(const Duration(seconds: 1)),
+      DateTime(2026, 11, 23, 12, 1, 2),
+    ]) {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: PostPrayerAdhkar(status: status, now: time)),
+      ));
+      await tester.runAsync(() async {
+        await rootBundle.loadString('assets/data/post-prayer-adhkar.json');
+      });
+      await tester.pumpAndSettle();
+      final clock =
+          tester.widget<Text>(find.byKey(const ValueKey('post-prayer-clock')));
+      expect(
+          clock.data,
+          {
+            start: '11:59:59',
+            start.add(const Duration(seconds: 1)): '12:00:00',
+            DateTime(2026, 11, 23, 12, 1, 2): '12:01:02',
+          }[time]);
+      expect(tester.takeException(), isNull);
     }
   });
 }
