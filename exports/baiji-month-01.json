@@ -1,0 +1,55 @@
+{
+  "name": "مواقيت الصلاة لمدينة بيجي",
+  "time_format": "HH:mm",
+  "time_system": "24-hour",
+  "timezone": "Asia/Baghdad",
+  "recurrence": "annual",
+  "calculation_rules": {
+    "sunrise": "شروق الجدول الأصلي + دقيقة واحدة",
+    "fajr_second": "شروق بيجي - 80 دقيقة؛ لا تستخدم قيمة الفجر المطبوعة",
+    "fajr_first": "الفجر الثاني - 15 دقيقة؛ لا تستخدم قيمة الفجر المطبوعة",
+    "dhuhr": "ظهر الجدول الأصلي + دقيقة واحدة",
+    "asr": "كما في الجدول الأصلي",
+    "maghrib": "كما في الجدول الأصلي",
+    "isha": "المغرب + 80 دقيقة"
+  },
+  "months": [
+    {
+      "month": 1,
+      "month_name": "كانون الثاني",
+      "days": [
+        {"day": 1, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:16", "asr": "14:49", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 2, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:17", "asr": "14:49", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 3, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:17", "asr": "14:50", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 4, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:18", "asr": "14:50", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 5, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:18", "asr": "14:50", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 6, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:18", "asr": "14:51", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 7, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:19", "asr": "14:51", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 8, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:19", "asr": "14:51", "maghrib": "17:10", "isha": "18:30"},
+        {"day": 9, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:20", "asr": "14:52", "maghrib": "17:11", "isha": "18:31"},
+        {"day": 10, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:20", "asr": "14:52", "maghrib": "17:12", "isha": "18:32"},
+        {"day": 11, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:20", "asr": "14:53", "maghrib": "17:13", "isha": "18:33"},
+        {"day": 12, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:21", "asr": "14:53", "maghrib": "17:14", "isha": "18:34"},
+        {"day": 13, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:21", "asr": "14:54", "maghrib": "17:15", "isha": "18:35"},
+        {"day": 14, "fajr_first": "05:39", "fajr_second": "05:54", "sunrise": "07:14", "dhuhr": "12:21", "asr": "14:54", "maghrib": "17:16", "isha": "18:36"},
+        {"day": 15, "fajr_first": "05:38", "fajr_second": "05:53", "sunrise": "07:13", "dhuhr": "12:22", "asr": "14:55", "maghrib": "17:17", "isha": "18:37"},
+        {"day": 16, "fajr_first": "05:38", "fajr_second": "05:53", "sunrise": "07:13", "dhuhr": "12:22", "asr": "14:55", "maghrib": "17:18", "isha": "18:38"},
+        {"day": 17, "fajr_first": "05:38", "fajr_second": "05:53", "sunrise": "07:13", "dhuhr": "12:22", "asr": "14:56", "maghrib": "17:19", "isha": "18:39"},
+        {"day": 18, "fajr_first": "05:38", "fajr_second": "05:53", "sunrise": "07:13", "dhuhr": "12:23", "asr": "14:57", "maghrib": "17:20", "isha": "18:40"},
+        {"day": 19, "fajr_first": "05:37", "fajr_second": "05:52", "sunrise": "07:12", "dhuhr": "12:23", "asr": "14:57", "maghrib": "17:21", "isha": "18:41"},
+        {"day": 20, "fajr_first": "05:37", "fajr_second": "05:52", "sunrise": "07:12", "dhuhr": "12:23", "asr": "14:58", "maghrib": "17:22", "isha": "18:42"},
+        {"day": 21, "fajr_first": "05:36", "fajr_second": "05:51", "sunrise": "07:11", "dhuhr": "12:24", "asr": "14:59", "maghrib": "17:23", "isha": "18:43"},
+        {"day": 22, "fajr_first": "05:36", "fajr_second": "05:51", "sunrise": "07:11", "dhuhr": "12:24", "asr": "15:00", "maghrib": "17:24", "isha": "18:44"},
+        {"day": 23, "fajr_first": "05:36", "fajr_second": "05:51", "sunrise": "07:11", "dhuhr": "12:24", "asr": "15:01", "maghrib": "17:25", "isha": "18:45"},
+        {"day": 24, "fajr_first": "05:35", "fajr_second": "05:50", "sunrise": "07:10", "dhuhr": "12:24", "asr": "15:02", "maghrib": "17:26", "isha": "18:46"},
+        {"day": 25, "fajr_first": "05:34", "fajr_second": "05:49", "sunrise": "07:09", "dhuhr": "12:25", "asr": "15:03", "maghrib": "17:27", "isha": "18:47"},
+        {"day": 26, "fajr_first": "05:34", "fajr_second": "05:49", "sunrise": "07:09", "dhuhr": "12:25", "asr": "15:04", "maghrib": "17:28", "isha": "18:48"},
+        {"day": 27, "fajr_first": "05:33", "fajr_second": "05:48", "sunrise": "07:08", "dhuhr": "12:25", "asr": "15:05", "maghrib": "17:29", "isha": "18:49"},
+        {"day": 28, "fajr_first": "05:33", "fajr_second": "05:48", "sunrise": "07:08", "dhuhr": "12:25", "asr": "15:06", "maghrib": "17:30", "isha": "18:50"},
+        {"day": 29, "fajr_first": "05:32", "fajr_second": "05:47", "sunrise": "07:07", "dhuhr": "12:26", "asr": "15:07", "maghrib": "17:31", "isha": "18:51"},
+        {"day": 30, "fajr_first": "05:31", "fajr_second": "05:46", "sunrise": "07:06", "dhuhr": "12:26", "asr": "15:08", "maghrib": "17:32", "isha": "18:52"},
+        {"day": 31, "fajr_first": "05:31", "fajr_second": "05:46", "sunrise": "07:06", "dhuhr": "12:26", "asr": "15:09", "maghrib": "17:33", "isha": "18:53"}
+      ]
+    }
+  ]
+}
