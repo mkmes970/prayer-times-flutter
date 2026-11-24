@@ -50,6 +50,7 @@ flutter:
     - assets/data/numaysa-prayer-times.json
     - assets/data/tal-ali-prayer-times.json
     - assets/data/zab-prayer-times.json
+    - assets/data/tal-al-dhahab-prayer-times.json
     - assets/data/dua-ticker.json
     - assets/data/post-prayer-adhkar.json
     - assets/data/dashboard-hadiths.json

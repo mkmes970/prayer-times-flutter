@@ -118,7 +118,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
     expect(find.byType(SettingsScreen), findsOneWidget);
-    await tester.tap(find.text('واجهة التطبيق'));
+    await tester.scrollUntilVisible(
+      find.text('السمات'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('السمات'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
     expect(find.byType(AppearanceScreen), findsOneWidget);

@@ -71,11 +71,53 @@ void main() {
       'مواقيت الصلاة لقرية النميصة',
       'مواقيت الصلاة لقرية تل علي',
       'مواقيت الصلاة لناحية الزاب وضواحيها',
+      'مواقيت الصلاة لقرية تل الذهب',
     ]);
-    expect(regions.map((region) => region.id).toSet(), hasLength(regions.length));
+    expect(
+        regions.map((region) => region.id).toSet(), hasLength(regions.length));
     for (final region in regions) {
       expect(region.annualDays.length, 366);
     }
+  });
+
+  test('Tal al-Dhahab is selectable with the approved annual schedule',
+      () async {
+    final regions = await loadBundledSchedules();
+    final talAlDhahab = regions.singleWhere(
+      (region) => region.name == 'مواقيت الصلاة لقرية تل الذهب',
+    );
+    expect(talAlDhahab.annualDays.length, 366);
+    final january = talAlDhahab.timesFor(DateTime(2027, 1, 1))!;
+    expect(january['fajrFirst'], '05:39');
+    expect(january['fajrSecond'], '05:54');
+    expect(january['sunrise'], '07:14');
+    expect(january['dhuhr'], '12:16');
+    expect(january['asr'], '14:49');
+    expect(january['maghrib'], '17:10');
+    expect(january['isha'], '18:30');
+    expect(talAlDhahab.timesFor(DateTime(2028, 2, 29)), isNotNull);
+
+    final repository = _MemoryRepository(
+      AppData(
+        regions: {for (final region in regions) region.id: region},
+        selectedRegionId: regions.first.id,
+        settings: AppData.empty().settings,
+      ),
+    );
+    final controller = PrayerController(repository: repository);
+    await controller.initialize();
+    addTearDown(controller.dispose);
+    await controller.selectRegion(talAlDhahab.id);
+    expect(controller.selectedRegion?.name, 'مواقيت الصلاة لقرية تل الذهب');
+    expect(controller.selectedRegionId, talAlDhahab.id);
+    final reopened = PrayerController(repository: repository);
+    await reopened.initialize();
+    addTearDown(reopened.dispose);
+    expect(reopened.selectedRegion?.name, 'مواقيت الصلاة لقرية تل الذهب');
+    expect(
+      reopened.selectedRegion!.timesFor(DateTime(2028, 2, 29))!['isha'],
+      '19:21',
+    );
   });
 
   test(

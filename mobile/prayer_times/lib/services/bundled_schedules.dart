@@ -18,6 +18,7 @@ const bundledScheduleAssets = [
   'assets/data/numaysa-prayer-times.json',
   'assets/data/tal-ali-prayer-times.json',
   'assets/data/zab-prayer-times.json',
+  'assets/data/tal-al-dhahab-prayer-times.json',
 ];
 
 Future<List<PrayerRegion>> loadBundledSchedules() async {

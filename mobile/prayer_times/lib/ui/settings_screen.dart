@@ -855,11 +855,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           appBar: AppBar(title: Text('إعدادات ${controller.settings.appName}')),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 36),
-            children: [
+            children: _orderSettingsSections([
               ListTile(
+                key: const ValueKey('settings-section:السمات'),
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.palette_outlined),
-                title: const Text('واجهة التطبيق'),
+                title: const Text('السمات'),
                 subtitle: const Text('السمات ومعاينة مظهر كل وقت'),
                 trailing: const Icon(Icons.chevron_left),
                 onTap: () => Navigator.of(context).push(
@@ -868,10 +869,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
-              if (controller.storageError != null)
-                _WarningPanel(message: controller.storageError!),
-              if (controller.lastActionError != null)
-                _WarningPanel(message: controller.lastActionError!),
+              KeyedSubtree(
+                key: const ValueKey('settings-section:رسائل النظام'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (controller.storageError != null)
+                      _WarningPanel(message: controller.storageError!),
+                    if (controller.lastActionError != null)
+                      _WarningPanel(message: controller.lastActionError!),
+                  ],
+                ),
+              ),
               _section('عرض الأحاديث'),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -1091,6 +1100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+              _section('إدارة المناطق والمواقيت'),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -1394,7 +1404,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
-              _section('المظهر'),
+              _section('ألوان الخط والتاريخ'),
               SwitchListTile(
                 key: const ValueKey('dashboard-line-color-toggle'),
                 contentPadding: EdgeInsets.zero,
@@ -1504,6 +1514,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   controller.settings.copyWith(systemFont: value),
                 ),
               ),
+              _section('حجم خط اسم المسجد والساعة'),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('التحكم بحجم الخط'),
@@ -1558,6 +1569,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+              _section('بقية إعدادات الواجهة'),
               DropdownButtonFormField<int>(
                 value: controller.settings.accentColor,
                 decoration: const InputDecoration(labelText: 'لون الواجهة'),
@@ -1634,14 +1646,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: const Icon(Icons.restart_alt),
                 label: const Text('إعادة الإعدادات الافتراضية'),
               ),
-            ],
+            ]),
           ),
         );
       },
     );
   }
 
+  List<Widget> _orderSettingsSections(List<Widget> widgets) {
+    final groups = <String, List<Widget>>{};
+    final ungrouped = <Widget>[];
+    String? currentTitle;
+    var currentGroup = <Widget>[];
+
+    void saveCurrentGroup() {
+      if (currentTitle == null) {
+        ungrouped.addAll(currentGroup);
+      } else {
+        groups[currentTitle] = currentGroup;
+      }
+    }
+
+    for (final widget in widgets) {
+      final key = widget.key;
+      final marker =
+          key is ValueKey<String> && key.value.startsWith('settings-section:')
+              ? key.value.substring('settings-section:'.length)
+              : null;
+      if (marker == null) {
+        currentGroup.add(widget);
+        continue;
+      }
+      saveCurrentGroup();
+      currentTitle = marker;
+      currentGroup = [widget];
+    }
+    saveCurrentGroup();
+
+    const orderedTitles = [
+      'مواقيت الصلاة حسب المنطقة',
+      'السمات',
+      'اسم المسجد',
+      'تنبيهات الأذان',
+      'عرض الأحاديث',
+      'الشريط السفلي',
+      'الوقت المتبقي لإقامة الصلاة',
+      'وقت الصلاة',
+      'أذكار بعد الصلاة وخطبة الجمعة',
+      'صلاة التراويح والقيام في رمضان',
+      'تعديل التاريخ الهجري يدويًا',
+      'شهر رمضان المبارك',
+      'حجم خط اسم المسجد والساعة',
+      'تصحيح الوقت بالثواني',
+      'ألوان الخط والتاريخ',
+      'بقية إعدادات الواجهة',
+      'إدارة المناطق والمواقيت',
+      'تشغيل الجهاز والحماية',
+      'إعادة الضبط',
+      'رسائل النظام',
+    ];
+    return [
+      for (final title in orderedTitles)
+        if (groups.containsKey(title)) ...groups.remove(title)!,
+      for (final group in groups.values) ...group,
+      ...ungrouped,
+    ];
+  }
+
   Widget _section(String title) => Padding(
+        key: ValueKey('settings-section:$title'),
         padding: const EdgeInsets.only(top: 22, bottom: 9),
         child: Row(
           children: [

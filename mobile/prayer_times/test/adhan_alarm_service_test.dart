@@ -168,7 +168,11 @@ void main() {
       home: SettingsScreen(controller: controller),
     ));
     final master = find.widgetWithText(SwitchListTile, 'تفعيل صوت الأذان');
-    await tester.ensureVisible(master);
+    await tester.scrollUntilVisible(
+      master,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.runAsync(() async {
       await tester.tap(master);
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -177,11 +181,12 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
     expect(repository.data.settings.adhanEnabled, isTrue);
-    for (final slot in adhanPrayerSlots) {
-      expect(find.byTooltip('كتم صوت ${slot.label}'), findsOneWidget);
-    }
     final fajr = find.byTooltip('كتم صوت الفجر');
-    await tester.ensureVisible(fajr);
+    await tester.scrollUntilVisible(
+      fajr,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.runAsync(() async {
       await tester.tap(fajr);
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -191,6 +196,15 @@ void main() {
     expect(repository.data.settings.adhanPrayerEnabled['fajrSecond'], isFalse);
     expect(alarms.latest!.settings.adhanPrayerEnabled['fajrSecond'], isFalse);
     expect(repository.data.settings.adhanPrayerEnabled['dhuhr'], isTrue);
+    for (final slot in adhanPrayerSlots.skip(1)) {
+      final muted = find.byTooltip('كتم صوت ${slot.label}');
+      await tester.scrollUntilVisible(
+        muted,
+        400,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(muted, findsOneWidget);
+    }
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(

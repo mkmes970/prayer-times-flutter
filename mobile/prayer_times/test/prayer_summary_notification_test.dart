@@ -526,6 +526,11 @@ void main() {
         SwitchListTile, 'عرض مواقيت اليوم في لوحة الإشعارات');
     expect(toggle, findsNothing);
     expect(find.text('مواقيت الصلاة في الإشعارات'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.textContaining('إعدادات Android'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.textContaining('إعدادات Android'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     debugDefaultTargetPlatformOverride = null;
