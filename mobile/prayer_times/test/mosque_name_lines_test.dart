@@ -315,7 +315,7 @@ void main() {
         if (settings.mosqueName == _lines[0] && size.width == 1024) {
           final firstLine = visibleRect(find.text(_lines[0]));
           expect(firstLine.height, greaterThan(20));
-          expect(firstLine.top, lessThan(30));
+          expect(firstLine.top, lessThan(45));
         }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -331,7 +331,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     Map<String, double>? baseline;
-    for (final scales in [(1.0, 1.0), (1.4, 1.0), (1.0, 0.8)]) {
+    for (final scales in [
+      (1.0, 1.0),
+      (1.4, 1.0),
+      (1.0, 0.8),
+      (1.4, 1.3),
+    ]) {
       final controller = PrayerController(
         repository: _Repository(_data(_settings(7).copyWith(
           fontScale: scales.$1,
@@ -345,29 +350,49 @@ void main() {
       await tester.pump();
       final heading = find.byKey(const ValueKey('dashboard-mosque-area'));
       final readout = find.byKey(const ValueKey('dashboard-clock-calendars'));
+      final headingRect = tester.getRect(heading);
+      final readoutRect = tester.getRect(readout);
+      expect(headingRect.bottom, closeTo(readoutRect.top, 0.01));
       expect(tester.getSize(heading).height / tester.getSize(readout).height,
           closeTo(35 / 65, 0.001));
       double font(String text) =>
           tester.widget<Text>(find.text(text)).style!.fontSize!;
+      double renderedHeight(String text) =>
+          tester.getRect(find.text(text)).height;
       final values = {
         'name': font(_lines.first),
+        'nameHeight': renderedHeight(_lines.first),
         'clock': font('1:27:58'),
+        'clockHeight': renderedHeight('1:27:58'),
         'weekday': font('الأحد'),
+        'weekdayHeight': renderedHeight('الأحد'),
         'prayer': font('العصر'),
         'time': font('2:40'),
+        'timeHeight': renderedHeight('2:40'),
         'countdown': font('باقي لأذان العصر'),
       };
       if (baseline == null) {
         baseline = values;
       } else {
         expect(values['name'], closeTo(baseline['name']! * scales.$1, 0.01));
+        if (scales.$1 > 1) {
+          expect(values['nameHeight'], greaterThan(baseline['nameHeight']!));
+        }
         for (final key in ['clock', 'weekday']) {
           expect(values[key], closeTo(baseline[key]! * scales.$2, 0.01));
+        }
+        for (final key in ['clockHeight', 'weekdayHeight']) {
+          if (scales.$2 > 1) {
+            expect(values[key], greaterThan(baseline[key]!));
+          }
         }
         for (final key in ['prayer', 'time', 'countdown']) {
           expect(values[key], baseline[key]);
         }
       }
+      expect(values['prayer'], greaterThan(26));
+      expect(values['time'], greaterThan(24));
+      expect(values['timeHeight'], greaterThan(24));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       controller.dispose();

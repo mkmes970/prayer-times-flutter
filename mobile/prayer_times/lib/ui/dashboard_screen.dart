@@ -476,13 +476,12 @@ class _MainInformation extends StatelessWidget {
             ? math.min(mq.width * 0.0425, mq.height * 0.088)
             : mq.width * 0.105) *
         clockScale;
-    final headingSize =
-        compact ? math.min(mq.width * 0.054, mq.height * 0.11) : 42.0;
     final labelSize =
         compact ? math.min(mq.width * 0.031, mq.height * 0.068) : 27.0;
 
-    // Only this readout can adapt to the screen's height. The mosque heading
-    // has its own remaining space and can never shrink the clock or calendars.
+    // Keep each readout at the size requested by the clock slider. Clip only
+    // the bottom of this region when enlarged text no longer fits; this keeps
+    // it out of the mosque-name region and lets the Hijri date fall away first.
     final information = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -583,38 +582,46 @@ class _MainInformation extends StatelessWidget {
     final informationPanel = Padding(
       padding: EdgeInsets.only(bottom: mq.height * 0.015),
       child: LayoutBuilder(
-        builder: (context, constraints) => Column(
-          children: [
-            Expanded(
-              flex: 35,
-              child: SizedBox(
-                key: const ValueKey('dashboard-mosque-area'),
-                child: MosqueHeading(
-                  settings: controller.settings,
-                  style: TextStyle(
-                    color: pine,
-                    fontSize: headingSize * scale,
-                    fontWeight: FontWeight.bold,
-                    height: 1.05,
-                    shadows: const [],
+        builder: (context, constraints) {
+          final headingSize = constraints.maxHeight * 0.35 / 3 / 1.05 / 1.4;
+          return Column(
+            children: [
+              Expanded(
+                flex: 35,
+                child: SizedBox(
+                  key: const ValueKey('dashboard-mosque-area'),
+                  child: MosqueHeading(
+                    settings: controller.settings,
+                    style: TextStyle(
+                      color: pine,
+                      fontSize: headingSize * scale,
+                      fontWeight: FontWeight.bold,
+                      height: 1.05,
+                      shadows: const [],
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 65,
-              key: const ValueKey('dashboard-clock-calendars'),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.bottomCenter,
-                child: SizedBox(
-                  width: constraints.maxWidth,
-                  child: information,
+              Expanded(
+                flex: 65,
+                key: const ValueKey('dashboard-clock-calendars'),
+                child: ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    minHeight: 0,
+                    maxHeight: double.infinity,
+                    minWidth: constraints.maxWidth,
+                    maxWidth: constraints.maxWidth,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      child: information,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
     final panel = !showHadith
@@ -930,8 +937,8 @@ class _PrayerRow extends StatelessWidget {
     final displaySize = MediaQuery.sizeOf(context);
     final boxHeight = compact ? displaySize.height * 0.08 : 42.0;
     final nameSize = compact
-        ? math.min(displaySize.width * 0.028, displaySize.height * 0.058)
-        : 26.0;
+        ? math.min(displaySize.width * 0.032, displaySize.height * 0.066)
+        : 30.0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       height: height,
@@ -988,9 +995,9 @@ class _PrayerRow extends StatelessWidget {
                 style: TextStyle(
                   color: const Color(0xFFFFF5DE),
                   fontSize: (compact
-                          ? math.min(displaySize.width * 0.027,
-                              displaySize.height * 0.057)
-                          : 24.0) *
+                          ? math.min(displaySize.width * 0.029,
+                              displaySize.height * 0.061)
+                          : 28.0) *
                       scale,
                   fontWeight: FontWeight.bold,
                   height: 1.1,
