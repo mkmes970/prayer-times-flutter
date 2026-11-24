@@ -1,0 +1,19 @@
+// Flutter builds its Gradle plugin as an included build, with its own settings.
+// Apply the mirror there too, not only to the Android app's pluginManagement.
+gradle.beforeSettings { settings ->
+    settings.pluginManagement.repositories.maven {
+        name = 'CentralGoogleMirror'
+        url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+    }
+    settings.dependencyResolutionManagement.repositories.maven {
+        name = 'CentralGoogleMirror'
+        url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+    }
+}
+
+gradle.beforeProject { project ->
+    project.buildscript.repositories.maven {
+        name = 'CentralGoogleMirror'
+        url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+    }
+}
