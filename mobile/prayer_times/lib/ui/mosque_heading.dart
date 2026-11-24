@@ -24,23 +24,33 @@ class MosqueHeading extends StatelessWidget {
       settings.mosqueNameLine3.trim(),
     ];
     if (lines.every((line) => line.isEmpty)) lines[0] = settings.appName;
-    return LayoutBuilder(
-      builder: (context, constraints) => Column(
-        mainAxisSize:
-            constraints.hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var index = 0; index < lines.length; index++)
-            if (constraints.hasBoundedHeight)
-              Expanded(child: _slot(lines[index], index))
-            else
-              SizedBox(
-                height: MediaQuery.textScalerOf(context)
-                        .scale(style.fontSize ?? 14) *
-                    (style.height ?? 1.4),
-                child: _slot(lines[index], index),
-              ),
-        ],
+    // Amiri's dots and tall strokes can paint outside a deliberately compact
+    // line box. Keep the requested size/spacing, but never clip that glyph ink.
+    // Reserve outer ink room too, since the dashboard clips the whole heading.
+    final inkInset = fitLines
+        ? 0.0
+        : MediaQuery.textScalerOf(context).scale(style.fontSize ?? 14) * .18;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: inkInset),
+      child: LayoutBuilder(
+        builder: (context, constraints) => Column(
+          mainAxisSize: constraints.hasBoundedHeight
+              ? MainAxisSize.max
+              : MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var index = 0; index < lines.length; index++)
+              if (constraints.hasBoundedHeight)
+                Expanded(child: _slot(lines[index], index))
+              else
+                SizedBox(
+                  height: MediaQuery.textScalerOf(context)
+                          .scale(style.fontSize ?? 14) *
+                      (style.height ?? 1.4),
+                  child: _slot(lines[index], index),
+                ),
+          ],
+        ),
       ),
     );
   }
@@ -57,6 +67,7 @@ class MosqueHeading extends StatelessWidget {
       textDirection: TextDirection.rtl,
       maxLines: 1,
       softWrap: false,
+      overflow: TextOverflow.visible,
       style: style,
     );
     return fitLines

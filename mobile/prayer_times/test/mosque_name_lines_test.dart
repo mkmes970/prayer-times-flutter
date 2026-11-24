@@ -536,4 +536,147 @@ void main() {
     }
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('Amiri dots and strokes are not clipped in any mosque line',
+      (tester) async {
+    tester.view.physicalSize = const Size(700, 400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.runAsync(() async {
+      await (FontLoader('Amiri')
+            ..addFont(rootBundle.load('assets/fonts/Amiri-Regular.ttf'))
+            ..addFont(rootBundle.load('assets/fonts/Amiri-Bold.ttf')))
+          .load();
+    });
+    const name = 'مسجد الصحابي الجليل';
+    final capture = GlobalKey();
+    Future<(int, int)> ink(Widget child) async {
+      await tester.pumpWidget(Directionality(
+        textDirection: TextDirection.rtl,
+        child: Center(
+          child: RepaintBoundary(
+            key: capture,
+            child: SizedBox(
+              width: 650,
+              height: 350,
+              child: ClipRect(child: child),
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+      return (await tester.runAsync(() async {
+        final image = await (capture.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary)
+            .toImage();
+        final bytes =
+            await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        var alpha = 0;
+        var firstRow = image.height;
+        var lastRow = -1;
+        for (var y = 0; y < image.height; y++) {
+          for (var x = 0; x < image.width; x++) {
+            final value = bytes!.getUint8((y * image.width + x) * 4 + 3);
+            alpha += value;
+            if (value > 0) {
+              if (y < firstRow) firstRow = y;
+              if (y > lastRow) lastRow = y;
+            }
+          }
+        }
+        image.dispose();
+        return (alpha, lastRow - firstRow + 1);
+      }))!;
+    }
+
+    for (final size in [28.0, 61.0]) {
+      final style = TextStyle(
+        fontFamily: 'Amiri',
+        fontWeight: FontWeight.bold,
+        fontSize: size,
+        height: 1.05,
+        color: Colors.black,
+      );
+      // An unconstrained reference with ample paint space around the glyphs.
+      final reference = await ink(Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Text(name, style: style, overflow: TextOverflow.visible),
+        ),
+      ));
+      for (var line = 1; line <= 3; line++) {
+        final actual = await ink(OverflowBox(
+          alignment: Alignment.topCenter,
+          minHeight: 0,
+          maxHeight: double.infinity,
+          child: SizedBox(
+            width: 650,
+            child: MosqueHeading(
+              settings: AppSettings(
+                mosqueName: line == 1 ? name : '',
+                mosqueNameLine2: line == 2 ? name : '',
+                mosqueNameLine3: line == 3 ? name : '',
+              ),
+              style: style,
+              fitLines: false,
+            ),
+          ),
+        ));
+        expect(actual.$1, closeTo(reference.$1, reference.$1 * .01),
+            reason: 'Line $line at $size must retain all glyph ink');
+        expect(actual.$2, closeTo(reference.$2, 1),
+            reason: 'Ascenders, dots and descenders must retain their height');
+      }
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('three large mosque lines keep their glyphs in the dashboard',
+      (tester) async {
+    tester.view.physicalSize = const Size(1024, 465);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const channel = MethodChannel('com.example.prayertimes/device');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        (call) async =>
+            call.method == 'getDeviceTimeZoneId' ? 'Asia/Baghdad' : null);
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
+    final controller = PrayerController(
+      repository: _Repository(_data(const AppSettings(
+        mosqueName: 'مسجد الصحابي الجليل',
+        mosqueNameLine2: 'خالد بن الوليد',
+        mosqueNameLine3: 'رضي الله عنه',
+        fontScale: 1.4,
+        clockScale: .8,
+        tickerScrollingEnabled: true,
+      ))),
+      deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
+    );
+    await tester.runAsync(controller.initialize);
+    addTearDown(controller.dispose);
+    final capture = GlobalKey();
+    await tester.pumpWidget(RepaintBoundary(
+        key: capture, child: PrayerTimesApp(controller: controller)));
+    await tester.pump();
+    final area =
+        tester.getRect(find.byKey(const ValueKey('dashboard-mosque-area')));
+    final thirdLine = tester.getRect(find.text('رضي الله عنه'));
+    expect(thirdLine.bottom, lessThan(area.bottom));
+    expect(tester.takeException(), isNull);
+    await tester.runAsync(() async {
+      final image = await (capture.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary)
+          .toImage();
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File('../../generated-artifacts/mosque-name-unclipped.png')
+          .writeAsBytes(bytes!.buffer.asUint8List());
+      image.dispose();
+    });
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
