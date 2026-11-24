@@ -11,6 +11,7 @@ import 'package:prayer_times/services/prayer_summary_notification_service.dart';
 import 'package:prayer_times/state/prayer_controller.dart';
 import 'package:prayer_times/ui/clock_correction_controls.dart';
 import 'package:prayer_times/ui/prayer_activity_screen.dart';
+import 'package:prayer_times/main.dart';
 
 class _Repository extends LocalRepository {
   _Repository(this.data);
@@ -34,7 +35,8 @@ class _Alarms extends AdhanAlarmService {
   }
 }
 
-class _UnsupportedSummaryNotifications extends PrayerSummaryNotificationService {
+class _UnsupportedSummaryNotifications
+    extends PrayerSummaryNotificationService {
   @override
   bool get isSupported => false;
 }
@@ -66,13 +68,108 @@ AppData _data({int correction = 0, bool midnight = false}) {
 }
 
 Future<void> pumpAsyncAction(WidgetTester tester) async {
-  await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)));
+  await tester
+      .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
   await tester.pump();
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('clock keeps real time beneath alerts without shifting deadlines',
+      (tester) async {
+    tester.view.physicalSize = const Size(1024, 465);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final origin = tester.binding.clock.now();
+    // Start between seconds: the first repaint must not wait a full second.
+    final start = DateTime(2026, 10, 25, 11, 59, 29, 750);
+    var jump = Duration.zero;
+    DateTime deviceNow() =>
+        start.add(tester.binding.clock.now().difference(origin)).add(jump);
+    final controller = PrayerController(
+      repository: _Repository(_data()),
+      adhanAlarmService: _Alarms(),
+      prayerSummaryNotificationService: _UnsupportedSummaryNotifications(),
+      deviceNow: deviceNow,
+    );
+    await tester.runAsync(controller.initialize);
+    addTearDown(controller.dispose);
+    // Rearm within the widget test clock so delayed ticks are deterministic.
+    controller.refreshClock();
+    await tester.pumpWidget(PrayerTimesApp(controller: controller));
+    expect(controller.now, start);
+    expect(controller.activePrayerScreen(controller.now), isNull);
+    await tester.pump(const Duration(milliseconds: 249));
+    expect(controller.now, start);
+    await tester.pump(const Duration(milliseconds: 1));
+    final adhanAt = DateTime(2026, 10, 25, 12);
+    final iqamaAt = adhanAt.add(const Duration(minutes: 15));
+    for (var seconds = 30; seconds >= 0; seconds--) {
+      if (seconds != 30) await tester.pump(const Duration(seconds: 1));
+      expect(controller.now, adhanAt.subtract(Duration(seconds: seconds)));
+      final status = controller.activePrayerScreen(controller.now)!;
+      expect(status.phase, PrayerScreenPhase.adhanCountdown);
+      expect(status.endsAt, adhanAt);
+      expect(status.remainingAt(controller.now).inSeconds, seconds);
+      expect(find.byType(PrayerActivityScreen), findsOneWidget);
+      // The covered dashboard is still mounted and receives the same time.
+      expect(find.byKey(const ValueKey('dashboard-clock-calendars')),
+          findsOneWidget);
+      final now = controller.now;
+      final clockText =
+          '${now.hour % 12 == 0 ? 12 : now.hour % 12}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+      expect(find.text(clockText), findsOneWidget);
+    }
+    expect(controller.currentIqamaStatus(controller.now)!.target, iqamaAt);
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.now, adhanAt.add(const Duration(seconds: 1)));
+    expect(controller.activePrayerScreen(controller.now)!.phase,
+        PrayerScreenPhase.adhanAnnouncement);
+    await tester.pump(const Duration(seconds: 15));
+    expect(controller.now, adhanAt.add(const Duration(seconds: 16)));
+    expect(controller.activePrayerScreen(controller.now), isNull);
+    expect(
+        controller
+            .currentIqamaStatus(controller.now)!
+            .remainingAt(controller.now),
+        const Duration(minutes: 14, seconds: 44));
+
+    // Simulate suspended rendering: use current device time, not missed ticks.
+    jump = const Duration(minutes: 14, seconds: 13);
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.now, iqamaAt.subtract(const Duration(seconds: 30)));
+    for (var seconds = 30; seconds >= 0; seconds--) {
+      if (seconds != 30) await tester.pump(const Duration(seconds: 1));
+      expect(controller.now, iqamaAt.subtract(Duration(seconds: seconds)));
+      final status = controller.activePrayerScreen(controller.now)!;
+      expect(status.phase, PrayerScreenPhase.iqamaCountdown);
+      expect(status.endsAt, iqamaAt);
+      expect(status.remainingAt(controller.now).inSeconds, seconds);
+    }
+    await tester.pump(const Duration(seconds: 1));
+    final prayer = controller.activePrayerScreen(controller.now)!;
+    expect(prayer.phase, PrayerScreenPhase.prayerBlackout);
+    expect(prayer.startsAt, iqamaAt);
+    expect(prayer.endsAt, iqamaAt.add(const Duration(minutes: 8)));
+    expect(prayer.remainingAt(controller.now),
+        const Duration(minutes: 7, seconds: 59));
+    // Zero's visible second must not add one second to prayer or dhikr.
+    jump += const Duration(minutes: 7, seconds: 58);
+    await tester.pump(const Duration(seconds: 1));
+    final dhikr = controller.activePrayerScreen(controller.now)!;
+    expect(dhikr.phase, PrayerScreenPhase.postPrayerDhikr);
+    expect(dhikr.startsAt, DateTime(2026, 10, 25, 12, 23));
+    expect(dhikr.endsAt, DateTime(2026, 10, 25, 12, 28));
+    // Resuming refreshes immediately, including a fractional device reading.
+    jump += const Duration(minutes: 5, milliseconds: 350);
+    controller.refreshClock();
+    expect(controller.now, deviceNow());
+    expect(controller.activePrayerScreen(controller.now), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(controller.disposeController);
+  });
 
   test('corrections accumulate, survive reopening and do not drift per tick',
       () async {

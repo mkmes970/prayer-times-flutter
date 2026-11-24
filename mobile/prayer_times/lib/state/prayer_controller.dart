@@ -177,10 +177,7 @@ class PrayerController extends ChangeNotifier {
     } on MissingPluginException {
       _deviceTimeZoneId = null;
     }
-    _ticker ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      clock.value = correctedTime(_deviceNow());
-      unawaited(_pruneExpiredRamadan());
-    });
+    refreshClock();
     await _syncAdhanSchedule(requestPermissions: false);
     final permissionFlowRan = await _requestPrayerSummaryPermissionIfNeeded();
     if (!permissionFlowRan) await _syncPrayerSummaryNotification();
@@ -190,9 +187,28 @@ class PrayerController extends ChangeNotifier {
 
   Future<void> refreshPrayerSummaryOnResume() async {
     if (!_ready) return;
-    clock.value = correctedTime(_deviceNow());
+    refreshClock();
     final permissionFlowRan = await _requestPrayerSummaryPermissionIfNeeded();
     if (!permissionFlowRan) await _syncPrayerSummaryNotification();
+  }
+
+  /// Alerts only cover the dashboard: they never own or advance its clock.
+  /// Read device time afresh and align the next repaint to its second boundary.
+  /// A delayed callback or resume skips stale readings instead of replaying
+  /// ticks, accumulating drift, or shifting any prayer deadline.
+  void refreshClock() {
+    _ticker?.cancel();
+    final deviceTime = _deviceNow();
+    clock.value = correctedTime(deviceTime);
+    final fraction =
+        deviceTime.microsecondsSinceEpoch % Duration.microsecondsPerSecond;
+    _ticker = Timer(
+      Duration(microseconds: Duration.microsecondsPerSecond - fraction),
+      () {
+        refreshClock();
+        unawaited(_pruneExpiredRamadan());
+      },
+    );
   }
 
   Future<void> disposeController() async {
