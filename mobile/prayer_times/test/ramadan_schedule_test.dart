@@ -267,7 +267,16 @@ void main() {
     final at = start.add(const Duration(hours: 5, minutes: 24));
     expect(c.nextPrayerStatus(at).target,
         start.add(const Duration(hours: 5, minutes: 25)));
-    expect(c.activePrayerScreen(at.add(const Duration(minutes: 1)))!.phase,
+    final adhanZero =
+        c.activePrayerScreen(at.add(const Duration(minutes: 1)))!;
+    expect(adhanZero.phase, PrayerScreenPhase.adhanCountdown);
+    expect(adhanZero.remainingAt(at.add(const Duration(minutes: 1))),
+        Duration.zero);
+    expect(
+        c
+            .activePrayerScreen(
+                at.add(const Duration(minutes: 1, seconds: 1)))!
+            .phase,
         PrayerScreenPhase.adhanAnnouncement);
     final iqama = c.currentIqamaStatus(at.add(const Duration(minutes: 2)));
     expect(iqama?.target, start.add(const Duration(hours: 5, minutes: 45)));

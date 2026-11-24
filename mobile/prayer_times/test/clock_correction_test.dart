@@ -139,11 +139,17 @@ void main() {
         controller.correctedTime(DateTime(2026, 10, 25, hour, minute, second));
     expect(controller.activePrayerScreen(at(11, 59, 15))!.phase,
         PrayerScreenPhase.adhanCountdown);
-    expect(controller.activePrayerScreen(at(11, 59, 45))!.phase,
+    final adhanZero = controller.activePrayerScreen(at(11, 59, 45))!;
+    expect(adhanZero.phase, PrayerScreenPhase.adhanCountdown);
+    expect(adhanZero.remainingAt(at(11, 59, 45)), Duration.zero);
+    expect(controller.activePrayerScreen(at(11, 59, 46))!.phase,
         PrayerScreenPhase.adhanAnnouncement);
     expect(controller.activePrayerScreen(at(12, 14, 15))!.phase,
         PrayerScreenPhase.iqamaCountdown);
-    expect(controller.activePrayerScreen(at(12, 14, 45))!.phase,
+    final iqamaZero = controller.activePrayerScreen(at(12, 14, 45))!;
+    expect(iqamaZero.phase, PrayerScreenPhase.iqamaCountdown);
+    expect(iqamaZero.remainingAt(at(12, 14, 45)), Duration.zero);
+    expect(controller.activePrayerScreen(at(12, 14, 46))!.phase,
         PrayerScreenPhase.prayerBlackout);
     expect(controller.activePrayerScreen(at(12, 22, 44))!.phase,
         PrayerScreenPhase.prayerBlackout);
