@@ -5,6 +5,11 @@ gradle.beforeSettings { settings ->
         name = 'CentralGoogleMirror'
         url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
     }
+    // Adding any explicit repository disables Gradle's implicit Plugin Portal.
+    // kotlin-dsl's plugin marker is published there, not on Maven Central.
+    settings.pluginManagement.repositories.gradlePluginPortal()
+    settings.pluginManagement.repositories.google()
+    settings.pluginManagement.repositories.mavenCentral()
     settings.dependencyResolutionManagement.repositories.maven {
         name = 'CentralGoogleMirror'
         url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
