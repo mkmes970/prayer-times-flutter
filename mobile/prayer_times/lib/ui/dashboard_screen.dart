@@ -18,6 +18,7 @@ import 'settings_screen.dart';
 import 'theme_catalog.dart';
 import 'ramadan_screen.dart';
 import 'mosque_heading.dart';
+import '../models/dashboard_font_levels.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
@@ -467,25 +468,42 @@ class _MainInformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pine = palette.ink;
-    final scale = controller.settings.fontScale;
-    final clockScale = controller.settings.clockScale;
+    final scale = DashboardFontLevels.nameRatio(controller.settings.fontScale);
+    final clockScale =
+        DashboardFontLevels.clockRatio(controller.settings.clockScale);
     final hijri = controller.hijriDateAt(now);
     final gregorianParts = formatGregorianDate(now).split('/');
     final mq = MediaQuery.sizeOf(context);
-    final clockSize = (compact
-            ? math.min(mq.width * 0.0425, mq.height * 0.088)
-            : mq.width * 0.105) *
-        clockScale;
-    final labelSize =
-        compact ? math.min(mq.width * 0.031, mq.height * 0.068) : 27.0;
+    final prayerNameSize =
+        compact ? math.min(mq.width * 0.032, mq.height * 0.066) : 30.0;
+    final clockSize = prayerNameSize * clockScale;
+    final labelSize = prayerNameSize;
+    final dateScale = clockSize / (compact ? 30.5 : 28.5);
 
-    // Keep each readout at the size requested by the clock slider. Clip only
-    // the bottom of this region when enlarged text no longer fits; this keeps
-    // it out of the mosque-name region and lets the Hijri date fall away first.
+    // This group takes its natural height and stays anchored above the timer.
+    // Increasing its font size consumes space upward, never below the Hijri date.
     final information = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
+        RegionSelectionNotice(
+          visible: controller.selectedRegion == null,
+          fontSize: (compact ? 22.0 : 26.0),
+        ),
+        if (controller.selectedRegion != null &&
+            _needsBaghdadNotice(controller, now))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 7),
+            child: Text(
+              'تحقق من ضبط المنطقة الزمنية على Asia/Baghdad',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: palette.ink,
+                fontSize: 12.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         Text(
           _formatClock(
             now,
@@ -516,7 +534,7 @@ class _MainInformation extends StatelessWidget {
         _GregorianDateLabel(
           parts: gregorianParts,
           compact: compact,
-          scale: clockScale,
+          scale: dateScale,
           palette: palette,
         ),
         if (controller.settings.showHijriDate) const SizedBox(height: 6),
@@ -524,31 +542,8 @@ class _MainInformation extends StatelessWidget {
           _HijriDateLabel(
             date: hijri,
             compact: compact,
-            scale: clockScale,
+            scale: dateScale,
             palette: palette,
-          ),
-        RegionSelectionNotice(
-          visible: controller.selectedRegion == null,
-          fontSize: (compact
-                  ? math
-                      .min(mq.width * 0.030, mq.height * 0.052)
-                      .clamp(22.0, 30.0)
-                  : 26.0) *
-              clockScale,
-        ),
-        if (controller.selectedRegion != null &&
-            _needsBaghdadNotice(controller, now))
-          Padding(
-            padding: const EdgeInsets.only(top: 7),
-            child: Text(
-              'تحقق من ضبط المنطقة الزمنية على Asia/Baghdad',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: palette.ink,
-                fontSize: 12.0 * clockScale,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
       ],
     );
@@ -580,44 +575,39 @@ class _MainInformation extends StatelessWidget {
     final fridayMode = isFridayHadithWindow(now,
         morningEndsAt: sunriseAt, dhuhrAt: timeAt('dhuhr'));
     final informationPanel = Padding(
-      padding: EdgeInsets.only(bottom: mq.height * 0.015),
+      padding: const EdgeInsets.only(bottom: 2),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final headingSize = constraints.maxHeight * 0.35 / 3 / 1.05 / 1.4;
+          final headingSize = prayerNameSize * scale;
           return Column(
             children: [
               Expanded(
-                flex: 35,
-                child: SizedBox(
-                  key: const ValueKey('dashboard-mosque-area'),
-                  child: MosqueHeading(
-                    settings: controller.settings,
-                    style: TextStyle(
-                      color: pine,
-                      fontSize: headingSize * scale,
-                      fontWeight: FontWeight.bold,
-                      height: 1.05,
-                      shadows: const [],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 65,
-                key: const ValueKey('dashboard-clock-calendars'),
                 child: ClipRect(
+                  key: const ValueKey('dashboard-mosque-area'),
                   child: OverflowBox(
                     alignment: Alignment.topCenter,
                     minHeight: 0,
                     maxHeight: double.infinity,
                     minWidth: constraints.maxWidth,
                     maxWidth: constraints.maxWidth,
-                    child: SizedBox(
-                      width: constraints.maxWidth,
-                      child: information,
+                    child: MosqueHeading(
+                      settings: controller.settings,
+                      fitLines: false,
+                      style: TextStyle(
+                        color: pine,
+                        fontSize: headingSize,
+                        fontWeight: FontWeight.bold,
+                        height: 1.05,
+                        shadows: const [],
+                      ),
                     ),
                   ),
                 ),
+              ),
+              SizedBox(
+                key: const ValueKey('dashboard-clock-calendars'),
+                width: constraints.maxWidth,
+                child: information,
               ),
             ],
           );

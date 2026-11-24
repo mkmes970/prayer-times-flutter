@@ -8,11 +8,13 @@ class MosqueHeading extends StatelessWidget {
   const MosqueHeading({
     required this.settings,
     required this.style,
+    this.fitLines = true,
     super.key,
   });
 
   final AppSettings settings;
   final TextStyle style;
+  final bool fitLines;
 
   @override
   Widget build(BuildContext context) {
@@ -48,15 +50,17 @@ class MosqueHeading extends StatelessWidget {
         child: line.isEmpty ? null : _line(line),
       );
 
-  Widget _line(String line) => FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          englishDigits(line),
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
-          maxLines: 1,
-          softWrap: false,
-          style: style,
-        ),
-      );
+  Widget _line(String line) {
+    final text = Text(
+      englishDigits(line),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.rtl,
+      maxLines: 1,
+      softWrap: false,
+      style: style,
+    );
+    return fitLines
+        ? FittedBox(fit: BoxFit.scaleDown, child: text)
+        : Align(alignment: Alignment.center, child: text);
+  }
 }

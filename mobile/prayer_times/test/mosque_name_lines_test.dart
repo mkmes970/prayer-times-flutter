@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:prayer_times/main.dart';
 import 'package:prayer_times/models/app_data.dart';
 import 'package:prayer_times/models/app_settings.dart';
+import 'package:prayer_times/models/dashboard_font_levels.dart';
 import 'package:prayer_times/models/prayer_schedule.dart';
 import 'package:prayer_times/services/local_repository.dart';
 import 'package:prayer_times/state/prayer_controller.dart';
@@ -26,6 +27,15 @@ class _Repository extends LocalRepository {
   @override
   Future<void> save(AppData value) async =>
       data = AppData.fromJson(jsonDecode(jsonEncode(value.toJson())));
+}
+
+class _SettingsController extends PrayerController {
+  _SettingsController({required super.repository});
+  Future<void>? pendingSave;
+
+  @override
+  Future<void> updateSettings(AppSettings value) =>
+      pendingSave = super.updateSettings(value);
 }
 
 const _lines = ['مسجد الصحابي', 'خالد بن الوليد', 'رضي الله عنه'];
@@ -300,7 +310,7 @@ void main() {
           // At the reference phone size the clock is genuinely large on
           // screen, not merely a large font inside a shrunken parent.
           if (size.width == 1024) {
-            expect(rects.first.height, greaterThan(38));
+            expect(visibleRect(find.text('1:27:58')).height, greaterThan(20));
           }
         } else {
           expect(rects.length, reference.length);
@@ -309,7 +319,8 @@ void main() {
             expect(rects[i].height, closeTo(reference[i].height, 0.01));
           }
         }
-        final heading = visibleRect(find.byType(MosqueHeading));
+        final heading =
+            visibleRect(find.byKey(const ValueKey('dashboard-mosque-area')));
         expect(heading.top, greaterThanOrEqualTo(0));
         expect(heading.bottom, lessThanOrEqualTo(rects.first.top));
         if (settings.mosqueName == _lines[0] && size.width == 1024) {
@@ -324,23 +335,22 @@ void main() {
     }
   });
 
-  testWidgets('35/65 regions and independent name/readout font controls',
+  testWidgets('ten independent font levels keep calendars bottom anchored',
       (tester) async {
     tester.view.physicalSize = const Size(1024, 465);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     Map<String, double>? baseline;
-    for (final scales in [
-      (1.0, 1.0),
-      (1.4, 1.0),
-      (1.0, 0.8),
-      (1.4, 1.3),
-    ]) {
+    double? previousClockHeight;
+    double? previousNameHeight;
+    for (var level = 1; level <= 10; level++) {
+      final nameScale = DashboardFontLevels.nameScale(level);
+      final clockScale = DashboardFontLevels.clockScale(level);
       final controller = PrayerController(
         repository: _Repository(_data(_settings(7).copyWith(
-          fontScale: scales.$1,
-          clockScale: scales.$2,
+          fontScale: nameScale,
+          clockScale: clockScale,
           tickerScrollingEnabled: true,
         ))),
         deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
@@ -353,8 +363,6 @@ void main() {
       final headingRect = tester.getRect(heading);
       final readoutRect = tester.getRect(readout);
       expect(headingRect.bottom, closeTo(readoutRect.top, 0.01));
-      expect(tester.getSize(heading).height / tester.getSize(readout).height,
-          closeTo(35 / 65, 0.001));
       double font(String text) =>
           tester.widget<Text>(find.text(text)).style!.fontSize!;
       double renderedHeight(String text) =>
@@ -370,22 +378,43 @@ void main() {
         'time': font('2:40'),
         'timeHeight': renderedHeight('2:40'),
         'countdown': font('باقي لأذان العصر'),
+        'readoutBottom': readoutRect.bottom,
+        'readoutTop': readoutRect.top,
       };
+      expect(
+          values['name'],
+          closeTo(values['prayer']! * DashboardFontLevels.nameRatio(nameScale),
+              .01));
+      expect(
+          values['clock'],
+          closeTo(
+              values['prayer']! * DashboardFontLevels.clockRatio(clockScale),
+              .01));
+      expect(values['weekday'], values['clock']);
+      final dates = tester
+          .widgetList<Text>(find.descendant(
+            of: readout,
+            matching: find.byType(Text),
+          ))
+          .where((text) => text.data == '2026' || text.data == '1448');
+      expect(dates.length, 2);
+      for (final date in dates) {
+        expect(date.style!.fontSize, closeTo(values['clock']!, .01));
+        expect(tester.getRect(find.byWidget(date)).bottom,
+            lessThanOrEqualTo(readoutRect.bottom + .01));
+      }
+      if (previousClockHeight != null) {
+        expect(values['clockHeight'], greaterThan(previousClockHeight));
+        expect(values['nameHeight'], greaterThan(previousNameHeight!));
+      }
+      previousClockHeight = values['clockHeight'];
+      previousNameHeight = values['nameHeight'];
       if (baseline == null) {
         baseline = values;
       } else {
-        expect(values['name'], closeTo(baseline['name']! * scales.$1, 0.01));
-        if (scales.$1 > 1) {
-          expect(values['nameHeight'], greaterThan(baseline['nameHeight']!));
-        }
-        for (final key in ['clock', 'weekday']) {
-          expect(values[key], closeTo(baseline[key]! * scales.$2, 0.01));
-        }
-        for (final key in ['clockHeight', 'weekdayHeight']) {
-          if (scales.$2 > 1) {
-            expect(values[key], greaterThan(baseline[key]!));
-          }
-        }
+        expect(
+            values['readoutBottom'], closeTo(baseline['readoutBottom']!, .01));
+        expect(values['readoutTop'], lessThan(baseline['readoutTop']!));
         for (final key in ['prayer', 'time', 'countdown']) {
           expect(values[key], baseline[key]);
         }
@@ -397,5 +426,114 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       controller.dispose();
     }
+  });
+
+  test('all ten font levels survive save and restore', () {
+    for (var level = 1; level <= 10; level++) {
+      final settings = AppSettings(
+        fontScale: DashboardFontLevels.nameScale(level),
+        clockScale: DashboardFontLevels.clockScale(11 - level),
+      );
+      final restored = AppSettings.fromJson(settings.toJson());
+      expect(DashboardFontLevels.nameLevel(restored.fontScale), level);
+      expect(DashboardFontLevels.clockLevel(restored.clockScale), 11 - level);
+    }
+    expect(DashboardFontLevels.nameRatio(1.4), 2);
+    expect(DashboardFontLevels.clockRatio(1.3), 1.25);
+  });
+
+  testWidgets('settings sliders expose ten choices and save independently',
+      (tester) async {
+    tester.view.physicalSize = const Size(1024, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _Repository(_data(_settings(7)));
+    final controller = _SettingsController(repository: repository);
+    await tester.runAsync(controller.initialize);
+    addTearDown(controller.dispose);
+    await tester
+        .pumpWidget(MaterialApp(home: SettingsScreen(controller: controller)));
+    final originalClockScale = controller.settings.clockScale;
+    for (final key in ['mosque-font-level', 'clock-font-level']) {
+      final finder = find.byKey(ValueKey(key));
+      await tester.scrollUntilVisible(finder, 350,
+          scrollable: find.byType(Scrollable).first);
+      final slider = tester.widget<Slider>(finder);
+      expect(slider.min, 1);
+      expect(slider.max, 10);
+      expect(slider.divisions, 9);
+      await tester.runAsync(() async {
+        slider.onChanged!(10);
+        await controller.pendingSave;
+      });
+      await tester.pump();
+      expect(DashboardFontLevels.nameLevel(repository.data.settings.fontScale),
+          10);
+      if (key == 'mosque-font-level') {
+        expect(controller.settings.clockScale, originalClockScale);
+      } else {
+        expect(
+            DashboardFontLevels.clockLevel(repository.data.settings.clockScale),
+            10);
+      }
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('maximum fonts remain unscaled on phone and television',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = PrayerController(
+      repository: _Repository(_data(const AppSettings(
+        mosqueName: 'مسجد الرحمن',
+        fontScale: 1.4,
+        clockScale: 1.3,
+        tickerScrollingEnabled: true,
+      ))),
+      deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
+    );
+    await tester.runAsync(controller.initialize);
+    addTearDown(controller.dispose);
+    final capture = GlobalKey();
+    for (final size in [
+      const Size(720, 360),
+      const Size(1024, 465),
+      const Size(1920, 1080),
+    ]) {
+      tester.view.physicalSize = size;
+      await tester.pumpWidget(RepaintBoundary(
+        key: capture,
+        child: PrayerTimesApp(controller: controller),
+      ));
+      await tester.pump();
+      double font(String text) =>
+          tester.widget<Text>(find.text(text)).style!.fontSize!;
+      expect(font('مسجد الرحمن'), closeTo(font('العصر') * 2, .01));
+      expect(font('1:27:58'), closeTo(font('العصر') * 1.25, .01));
+      final clockGroup = tester
+          .getRect(find.byKey(const ValueKey('dashboard-clock-calendars')));
+      final heading =
+          tester.getRect(find.byKey(const ValueKey('dashboard-mosque-area')));
+      expect(heading.height, greaterThan(0));
+      expect(heading.bottom, closeTo(clockGroup.top, .01));
+      expect(clockGroup.bottom,
+          lessThan(tester.getTopLeft(find.text('باقي لأذان العصر')).dy));
+      expect(tester.takeException(), isNull);
+      if (size.width == 1024) {
+        await tester.runAsync(() async {
+          final image = await (capture.currentContext!.findRenderObject()!
+                  as RenderRepaintBoundary)
+              .toImage();
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File('../../generated-artifacts/dashboard-max-fonts.png')
+              .writeAsBytes(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+      }
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

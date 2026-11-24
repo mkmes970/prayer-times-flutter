@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import '../services/adhan_alarm_service.dart';
 import 'appearance_screen.dart';
+import '../models/dashboard_font_levels.dart';
 import 'clock_correction_controls.dart';
 import 'ramadan_screen.dart';
 import 'region_selector.dart';
@@ -1509,14 +1510,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('اسم المسجد فقط'),
+                    Text(
+                        'اسم المسجد فقط — الدرجة ${DashboardFontLevels.nameLevel(controller.settings.fontScale)} من 10'),
                     Slider(
-                      min: 0.8,
-                      max: 1.4,
-                      divisions: 6,
-                      value: controller.settings.fontScale,
+                      key: const ValueKey('mosque-font-level'),
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      label:
+                          '${DashboardFontLevels.nameLevel(controller.settings.fontScale)}',
+                      value: DashboardFontLevels.nameLevel(
+                              controller.settings.fontScale)
+                          .toDouble(),
                       onChanged: (value) => controller.updateSettings(
-                        controller.settings.copyWith(fontScale: value),
+                        controller.settings.copyWith(
+                            fontScale:
+                                DashboardFontLevels.nameScale(value.round())),
                       ),
                     ),
                   ],
@@ -1528,14 +1537,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('الساعة واليوم والتقويمين'),
+                    Text(
+                        'الساعة واليوم والتقويمين — الدرجة ${DashboardFontLevels.clockLevel(controller.settings.clockScale)} من 10'),
                     Slider(
-                      min: 0.8,
-                      max: 1.3,
-                      divisions: 5,
-                      value: controller.settings.clockScale,
+                      key: const ValueKey('clock-font-level'),
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      label:
+                          '${DashboardFontLevels.clockLevel(controller.settings.clockScale)}',
+                      value: DashboardFontLevels.clockLevel(
+                              controller.settings.clockScale)
+                          .toDouble(),
                       onChanged: (value) => controller.updateSettings(
-                        controller.settings.copyWith(clockScale: value),
+                        controller.settings.copyWith(
+                            clockScale:
+                                DashboardFontLevels.clockScale(value.round())),
                       ),
                     ),
                   ],
