@@ -19,7 +19,7 @@ void main() {
   final paths = RegExp(
     r"'(assets/data/[^']+\.json)'",
   ).allMatches(catalogue).map((match) => match.group(1)!).toList();
-  check(paths.length == 11, 'All eleven approved regions must be registered.');
+  check(paths.length == 12, 'All twelve approved regions must be registered.');
   final regions = paths.map((path) {
     check(manifest.contains('    - $path'), 'Missing Flutter asset: $path');
     return regionFromScheduleFile(
@@ -29,6 +29,32 @@ void main() {
   check(
     regions.map((region) => region.id).toSet().length == paths.length,
     'Duplicate IDs.',
+  );
+  final talAlDhahab = regions.singleWhere(
+    (region) => region.name == 'مواقيت الصلاة لقرية تل الذهب',
+  );
+  check(
+      talAlDhahab.annualDays.length == 366, 'Incomplete Tal al-Dhahab table.');
+  final talAlDhahabRestored = AppData.fromJson(jsonDecode(jsonEncode(AppData(
+    regions: {for (final region in regions) region.id: region},
+    selectedRegionId: talAlDhahab.id,
+    settings: AppData.empty().settings,
+  ).toJson())));
+  check(talAlDhahabRestored.selectedRegionId == talAlDhahab.id,
+      'Tal al-Dhahab selection lost after reload.');
+  for (final year in [2026, 2027, 2028]) {
+    final region = talAlDhahabRestored.selectedRegion!;
+    final january = region.timesFor(DateTime(year, 1, 1))!;
+    check(january['fajrFirst'] == '05:39', 'Tal al-Dhahab first Fajr changed.');
+    check(january['asr'] == '14:49', 'Tal al-Dhahab afternoon time changed.');
+    check(region.timesFor(DateTime(year, 12, 31)) != null,
+        'Tal al-Dhahab year-end lookup missing.');
+  }
+  check(
+    talAlDhahabRestored.selectedRegion!
+            .timesFor(DateTime(2028, 2, 29))!['isha'] ==
+        '19:21',
+    'Tal al-Dhahab leap day changed.',
   );
   final hawd = regions.first;
   final abbasi = regions[1];
@@ -82,7 +108,8 @@ void main() {
     jsonDecode(jsonEncode(dhuwaibSelected.toJson())),
   );
   check(reopened.selectedRegionId == dhuwaib.id, 'Dhuwaib selection lost.');
-  check(reopened.regions.length == regions.length, 'An existing region was lost.');
+  check(reopened.regions.length == regions.length,
+      'An existing region was lost.');
   for (final year in [2026, 2027, 2028]) {
     final region = reopened.selectedRegion!;
     check(
