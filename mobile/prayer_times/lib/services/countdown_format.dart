@@ -1,5 +1,7 @@
 String formatCountdownDuration(Duration duration) {
-  final microseconds = duration.inMicroseconds.clamp(0, 1 << 62);
+  // Large bit shifts have different semantics in compiled JavaScript.
+  // Only negative durations need clamping; no upper limit is required.
+  final microseconds = duration.isNegative ? 0 : duration.inMicroseconds;
   final totalSeconds = (microseconds + Duration.microsecondsPerSecond - 1) ~/
       Duration.microsecondsPerSecond;
   final hours = (totalSeconds ~/ 3600).toString().padLeft(2, '0');
