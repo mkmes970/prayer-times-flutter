@@ -1505,28 +1505,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('حجم خط الواجهة'),
-                subtitle: Slider(
-                  min: 0.8,
-                  max: 1.4,
-                  divisions: 6,
-                  value: controller.settings.fontScale,
-                  onChanged: (value) => controller.updateSettings(
-                    controller.settings.copyWith(fontScale: value),
-                  ),
+                title: const Text('التحكم بحجم الخط'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('اسم المسجد فقط'),
+                    Slider(
+                      min: 0.8,
+                      max: 1.4,
+                      divisions: 6,
+                      value: controller.settings.fontScale,
+                      onChanged: (value) => controller.updateSettings(
+                        controller.settings.copyWith(fontScale: value),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('حجم الساعة'),
-                subtitle: Slider(
-                  min: 0.8,
-                  max: 1.3,
-                  divisions: 5,
-                  value: controller.settings.clockScale,
-                  onChanged: (value) => controller.updateSettings(
-                    controller.settings.copyWith(clockScale: value),
-                  ),
+                title: const Text('التحكم في حجم خط الساعة'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('الساعة واليوم والتقويمين'),
+                    Slider(
+                      min: 0.8,
+                      max: 1.3,
+                      divisions: 5,
+                      value: controller.settings.clockScale,
+                      onChanged: (value) => controller.updateSettings(
+                        controller.settings.copyWith(clockScale: value),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               DropdownButtonFormField<int>(

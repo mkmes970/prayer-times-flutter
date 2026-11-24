@@ -90,6 +90,7 @@ void main() {
     for (final time in [
       start,
       start.add(const Duration(seconds: 1)),
+      start.add(const Duration(seconds: 1, milliseconds: 600)),
       DateTime(2026, 11, 23, 12, 1, 2),
     ]) {
       await tester.pumpWidget(MaterialApp(
@@ -106,8 +107,14 @@ void main() {
           {
             start: '11:59:59',
             start.add(const Duration(seconds: 1)): '12:00:00',
+            start.add(const Duration(seconds: 1, milliseconds: 600)):
+                '12:00:00',
             DateTime(2026, 11, 23, 12, 1, 2): '12:01:02',
           }[time]);
+      if (time == start.add(const Duration(seconds: 1)) ||
+          time == start.add(const Duration(seconds: 1, milliseconds: 600))) {
+        expect(find.text('العودة للواجهة بعد 3:59'), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
     }
   });

@@ -262,9 +262,16 @@ void main() {
               ?.phase,
           PrayerScreenPhase.adhanCountdown);
       expect(controller.activePrayerScreen(adhan)?.phase,
+          PrayerScreenPhase.adhanCountdown);
+      expect(controller.activePrayerScreen(adhan)?.remainingAt(adhan),
+          Duration.zero);
+      expect(
+          controller
+              .activePrayerScreen(adhan.add(const Duration(seconds: 1)))
+              ?.phase,
           PrayerScreenPhase.adhanAnnouncement);
       expect(
-          controller.activePrayerScreen(adhan.add(const Duration(seconds: 15))),
+          controller.activePrayerScreen(adhan.add(const Duration(seconds: 16))),
           isNull);
       expect(
           controller
@@ -274,7 +281,8 @@ void main() {
           PrayerScreenPhase.iqamaCountdown);
       expect(
           controller
-              .activePrayerScreen(adhan.add(const Duration(minutes: 15)))
+              .activePrayerScreen(
+                  adhan.add(const Duration(minutes: 15, seconds: 1)))
               ?.phase,
           isNull);
       expect(
@@ -299,7 +307,7 @@ void main() {
         isNull,
       );
       expect(
-        controller.activePrayerScreen(DateTime(2026, 6, 10, 12, 20))?.phase,
+        controller.activePrayerScreen(DateTime(2026, 6, 10, 12, 20, 1))?.phase,
         PrayerScreenPhase.prayerBlackout,
       );
       expect(
@@ -344,7 +352,9 @@ void main() {
         expect(adhan.weekday, DateTime.friday);
         expect(controller.currentIqamaStatus(adhan), isNull);
         expect(
-          controller.activePrayerScreen(adhan)?.phase,
+          controller
+              .activePrayerScreen(adhan.add(const Duration(seconds: 1)))
+              ?.phase,
           PrayerScreenPhase.fridayKhutbah,
         );
         expect(

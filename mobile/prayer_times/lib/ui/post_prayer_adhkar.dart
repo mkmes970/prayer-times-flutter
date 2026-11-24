@@ -47,7 +47,11 @@ class PostPrayerAdhkar extends StatelessWidget {
           }
           final pages = adhkarForPrayer(snapshot.data!, status.prayerId);
           final columns = adhkarBoardColumns(pages);
-          final seconds = status.remainingAt(now).inSeconds;
+          final remaining = status.remainingAt(now).inMicroseconds;
+          final seconds = remaining <= 0
+              ? 0
+              : (remaining + Duration.microsecondsPerSecond - 1) ~/
+                  Duration.microsecondsPerSecond;
           return LayoutBuilder(builder: (context, constraints) {
             final size =
                 (constraints.maxHeight * .055).clamp(16.0, 48.0).toDouble();

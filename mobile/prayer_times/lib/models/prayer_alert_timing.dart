@@ -42,8 +42,9 @@ class PrayerAlert {
   }
 }
 
-/// Half-open intervals switch at the actual deadline. Derive remaining time
-/// from the clock so suspension or delayed timer ticks cannot extend alerts.
+/// Countdowns open exactly 30 seconds before the deadline, then retain zero
+/// for its one-second clock interval. Derive time from the actual deadline,
+/// never from a ticking counter (including after suspension).
 PrayerAlert? activePrayerAlert(
   DateTime now,
   Iterable<PrayerAlertEvent> events,
@@ -56,7 +57,10 @@ PrayerAlert? activePrayerAlert(
     DateTime start,
     DateTime end,
   ) {
-    if (!now.isBefore(start) && now.isBefore(end)) {
+    final visibleEnd = kind == PrayerAlertKind.adhanAnnouncement
+        ? end
+        : end.add(const Duration(seconds: 1));
+    if (!now.isBefore(start) && now.isBefore(visibleEnd)) {
       candidates.add(PrayerAlert(
         kind: kind,
         label: label,
@@ -82,8 +86,8 @@ PrayerAlert? activePrayerAlert(
         PrayerAlertKind.adhanAnnouncement,
         event,
         'حان موعد أذان ${event.label}',
-        event.adhanAt,
-        event.adhanAt.add(const Duration(seconds: 15)),
+        event.adhanAt.add(const Duration(seconds: 1)),
+        event.adhanAt.add(const Duration(seconds: 16)),
       );
     }
     // The Friday exception applies to Dhuhr only, not to other prayers.

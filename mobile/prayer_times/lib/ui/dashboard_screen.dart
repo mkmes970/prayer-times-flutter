@@ -238,6 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 },
                               ),
                             ),
+                            const SizedBox(height: 4),
                             DuaTicker(
                               palette: palette,
                               rotation: _duaRotation,
@@ -433,7 +434,7 @@ class _DashboardContent extends StatelessWidget {
           child: _CountdownStrip(
             controller: controller,
             now: now,
-            scale: controller.settings.fontScale,
+            scale: 1,
             compact: false,
           ),
         ),
@@ -508,7 +509,7 @@ class _MainInformation extends StatelessWidget {
           style: TextStyle(
             color: pine,
             fontWeight: FontWeight.bold,
-            fontSize: labelSize * scale,
+            fontSize: labelSize * clockScale,
             height: 1,
           ),
         ),
@@ -516,7 +517,7 @@ class _MainInformation extends StatelessWidget {
         _GregorianDateLabel(
           parts: gregorianParts,
           compact: compact,
-          scale: scale,
+          scale: clockScale,
           palette: palette,
         ),
         if (controller.settings.showHijriDate) const SizedBox(height: 6),
@@ -524,7 +525,7 @@ class _MainInformation extends StatelessWidget {
           _HijriDateLabel(
             date: hijri,
             compact: compact,
-            scale: scale,
+            scale: clockScale,
             palette: palette,
           ),
         RegionSelectionNotice(
@@ -534,7 +535,7 @@ class _MainInformation extends StatelessWidget {
                       .min(mq.width * 0.030, mq.height * 0.052)
                       .clamp(22.0, 30.0)
                   : 26.0) *
-              scale,
+              clockScale,
         ),
         if (controller.selectedRegion != null &&
             _needsBaghdadNotice(controller, now))
@@ -545,7 +546,7 @@ class _MainInformation extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: palette.ink,
-                fontSize: 12.0 * scale,
+                fontSize: 12.0 * clockScale,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -585,31 +586,24 @@ class _MainInformation extends StatelessWidget {
         builder: (context, constraints) => Column(
           children: [
             Expanded(
-              child: LayoutBuilder(
-                builder: (context, headingBounds) => OverflowBox(
-                  // Use some of the existing top padding for the name only;
-                  // the clock, dates, countdown and ticker do not move.
-                  alignment: Alignment.bottomCenter,
-                  minHeight: headingBounds.maxHeight + mq.height * 0.025,
-                  maxHeight: headingBounds.maxHeight + mq.height * 0.025,
-                  child: MosqueHeading(
-                    settings: controller.settings,
-                    style: TextStyle(
-                      color: pine,
-                      fontSize: headingSize * scale,
-                      fontWeight: FontWeight.bold,
-                      height: 1.05,
-                      shadows: const [],
-                    ),
+              flex: 35,
+              child: SizedBox(
+                key: const ValueKey('dashboard-mosque-area'),
+                child: MosqueHeading(
+                  settings: controller.settings,
+                  style: TextStyle(
+                    color: pine,
+                    fontSize: headingSize * scale,
+                    fontWeight: FontWeight.bold,
+                    height: 1.05,
+                    shadows: const [],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 4),
-            ConstrainedBox(
+            Expanded(
+              flex: 65,
               key: const ValueKey('dashboard-clock-calendars'),
-              constraints:
-                  BoxConstraints(maxHeight: constraints.maxHeight * 0.65),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.bottomCenter,
@@ -665,7 +659,7 @@ class _MainInformation extends StatelessWidget {
           child: _CountdownStrip(
             controller: controller,
             now: now,
-            scale: scale,
+            scale: 1,
             compact: compact,
           ),
         ),
@@ -805,7 +799,7 @@ class _CountdownCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        minHeight: compact ? MediaQuery.sizeOf(context).height * 0.19 : 84,
+        minHeight: compact ? MediaQuery.sizeOf(context).height * 0.16 : 72,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -839,7 +833,7 @@ class _CountdownCard extends StatelessWidget {
           ),
           Container(
             width: 1.5,
-            height: compact ? MediaQuery.sizeOf(context).height * 0.13 : 54,
+            height: compact ? MediaQuery.sizeOf(context).height * 0.10 : 42,
             margin: const EdgeInsets.symmetric(horizontal: 8),
             color: Colors.white.withValues(alpha: .5),
           ),
@@ -883,7 +877,7 @@ class _PrayerList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final times = controller.selectedRegion?.timesFor(now);
-    final scale = controller.settings.fontScale;
+    const scale = 1.0;
     return Column(
       children: [
         for (final slot in prayerSlots)
@@ -1063,7 +1057,6 @@ class _MosquePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (decorationsOnly) {
       _drawCelestialLight(canvas, size);
-      _drawDecorations(canvas, size);
       return;
     }
     final rect = Offset.zero & size;
@@ -1229,20 +1222,6 @@ class _MosquePainter extends CustomPainter {
       mosquePaint,
       detailPaint: detailPaint,
     );
-
-    _drawDecorations(canvas, size);
-  }
-
-  void _drawDecorations(Canvas canvas, Size size) {
-    final ornament = Paint()..color = palette.accent.withValues(alpha: 0.75);
-    for (final x in [size.width * 0.12, size.width * 0.88]) {
-      canvas.drawCircle(Offset(x, size.height * 0.06), 2.5, ornament);
-      canvas.drawLine(
-        Offset(x, size.height * 0.06),
-        Offset(x, size.height * 0.20),
-        ornament..strokeWidth = 1.3,
-      );
-    }
   }
 
   void _drawCelestialLight(Canvas canvas, Size size) {

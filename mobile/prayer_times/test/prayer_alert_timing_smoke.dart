@@ -21,16 +21,22 @@ void main() {
   expect(at(start)?.secondsAt(start) == 30, 'Display 30');
   final partial = start.add(const Duration(milliseconds: 200));
   expect(at(partial)?.secondsAt(partial) == 30, 'Round partial seconds up');
-  for (var seconds = 30; seconds >= 1; seconds--) {
+  expect(at(start.subtract(const Duration(microseconds: 1))) == null,
+      'Do not open even one microsecond before 30');
+  for (var seconds = 30; seconds >= 0; seconds--) {
     final now = noon.subtract(Duration(seconds: seconds));
     expect(at(now)?.secondsAt(now) == seconds, 'Countdown $seconds');
   }
-  expect(at(noon)?.kind == PrayerAlertKind.adhanAnnouncement, 'At adhan');
-  expect(at(noon)?.label == 'حان موعد أذان الظهر', 'Announcement label');
-  expect(at(noon.add(const Duration(seconds: 14, milliseconds: 999))) != null,
+  expect(at(noon)?.kind == PrayerAlertKind.adhanCountdown, 'Zero at adhan');
+  expect(at(noon.add(const Duration(milliseconds: 999)))?.secondsAt(noon) == 0,
+      'Zero remains visible for one clock second');
+  expect(
+      at(noon.add(const Duration(seconds: 1)))?.label == 'حان موعد أذان الظهر',
+      'Announcement label');
+  expect(at(noon.add(const Duration(seconds: 15, milliseconds: 999))) != null,
       'Announcement lasts full 15 seconds');
   expect(
-      at(noon.add(const Duration(seconds: 15))) == null, 'Restore dashboard');
+      at(noon.add(const Duration(seconds: 16))) == null, 'Restore dashboard');
   final iqama = noon.add(const Duration(minutes: 15));
   final fajr = PrayerAlertEvent(
     prayerId: 'fajrSecond',
@@ -55,7 +61,9 @@ void main() {
               ?.secondsAt(iqama.subtract(const Duration(seconds: 1))) ==
           1,
       'Last iqama second');
-  expect(at(iqama) == null, 'Hand over to existing iqama screen at deadline');
+  expect(at(iqama)?.kind == PrayerAlertKind.iqamaCountdown, 'Show iqama zero');
+  expect(at(iqama.add(const Duration(seconds: 1))) == null,
+      'Hand over after zero second');
   expect(at(iqama.subtract(const Duration(seconds: 1)))?.secondsAt(iqama) == 0,
       'Remaining time is zero at deadline');
   expect(at(noon)?.secondsAt(noon.add(const Duration(hours: 2))) == 0,
@@ -68,7 +76,8 @@ void main() {
       iqamaMinutes: minutes,
     );
     expect(
-        activePrayerAlert(noon, [unset])?.kind ==
+        activePrayerAlert(noon.add(const Duration(seconds: 1)), [unset])
+                ?.kind ==
             PrayerAlertKind.adhanAnnouncement,
         'Adhan works without iqama settings');
     expect(

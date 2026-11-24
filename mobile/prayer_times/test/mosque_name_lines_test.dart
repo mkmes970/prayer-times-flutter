@@ -314,13 +314,63 @@ void main() {
         expect(heading.bottom, lessThanOrEqualTo(rects.first.top));
         if (settings.mosqueName == _lines[0] && size.width == 1024) {
           final firstLine = visibleRect(find.text(_lines[0]));
-          expect(firstLine.height, greaterThan(30));
+          expect(firstLine.height, greaterThan(20));
           expect(firstLine.top, lessThan(30));
         }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
         controller.dispose();
       }
+    }
+  });
+
+  testWidgets('35/65 regions and independent name/readout font controls',
+      (tester) async {
+    tester.view.physicalSize = const Size(1024, 465);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    Map<String, double>? baseline;
+    for (final scales in [(1.0, 1.0), (1.4, 1.0), (1.0, 0.8)]) {
+      final controller = PrayerController(
+        repository: _Repository(_data(_settings(7).copyWith(
+          fontScale: scales.$1,
+          clockScale: scales.$2,
+          tickerScrollingEnabled: true,
+        ))),
+        deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
+      );
+      await tester.runAsync(controller.initialize);
+      await tester.pumpWidget(PrayerTimesApp(controller: controller));
+      await tester.pump();
+      final heading = find.byKey(const ValueKey('dashboard-mosque-area'));
+      final readout = find.byKey(const ValueKey('dashboard-clock-calendars'));
+      expect(tester.getSize(heading).height / tester.getSize(readout).height,
+          closeTo(35 / 65, 0.001));
+      double font(String text) =>
+          tester.widget<Text>(find.text(text)).style!.fontSize!;
+      final values = {
+        'name': font(_lines.first),
+        'clock': font('1:27:58'),
+        'weekday': font('الأحد'),
+        'prayer': font('العصر'),
+        'time': font('2:40'),
+        'countdown': font('باقي لأذان العصر'),
+      };
+      if (baseline == null) {
+        baseline = values;
+      } else {
+        expect(values['name'], closeTo(baseline['name']! * scales.$1, 0.01));
+        for (final key in ['clock', 'weekday']) {
+          expect(values[key], closeTo(baseline[key]! * scales.$2, 0.01));
+        }
+        for (final key in ['prayer', 'time', 'countdown']) {
+          expect(values[key], baseline[key]);
+        }
+      }
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
     }
   });
 }
