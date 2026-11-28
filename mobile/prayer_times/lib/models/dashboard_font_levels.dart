@@ -4,6 +4,8 @@ class DashboardFontLevels {
   static int clockLevel(double scale) => _level(scale, 1.3);
   static double nameScale(int level) => _scale(level, 1.4);
   static double clockScale(int level) => _scale(level, 1.3);
+  static double mainClockRatio(int level) =>
+      1 + (level.clamp(1, 10) - 1) / 9 * 2;
 
   static int _level(double scale, double max) =>
       (1 + (scale - 0.8) / (max - 0.8) * 9).round().clamp(1, 10);

@@ -351,6 +351,7 @@ void main() {
         repository: _Repository(_data(_settings(7).copyWith(
           fontScale: nameScale,
           clockScale: clockScale,
+          mainClockLevel: level,
           tickerScrollingEnabled: true,
         ))),
         deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
@@ -387,10 +388,15 @@ void main() {
               .01));
       expect(
           values['clock'],
-          closeTo(
-              values['prayer']! * DashboardFontLevels.clockRatio(clockScale),
+          closeTo(values['prayer']! * DashboardFontLevels.mainClockRatio(level),
               .01));
-      expect(values['weekday'], values['clock']);
+      expect(
+        values['weekday'],
+        closeTo(
+          values['prayer']! * DashboardFontLevels.clockRatio(clockScale),
+          .01,
+        ),
+      );
       final dates = tester
           .widgetList<Text>(find.descendant(
             of: readout,
@@ -399,7 +405,7 @@ void main() {
           .where((text) => text.data == '2026' || text.data == '1448');
       expect(dates.length, 2);
       for (final date in dates) {
-        expect(date.style!.fontSize, closeTo(values['clock']!, .01));
+        expect(date.style!.fontSize, closeTo(values['weekday']!, .01));
         expect(tester.getRect(find.byWidget(date)).bottom,
             lessThanOrEqualTo(readoutRect.bottom + .01));
       }
@@ -433,13 +439,17 @@ void main() {
       final settings = AppSettings(
         fontScale: DashboardFontLevels.nameScale(level),
         clockScale: DashboardFontLevels.clockScale(11 - level),
+        mainClockLevel: level,
       );
       final restored = AppSettings.fromJson(settings.toJson());
       expect(DashboardFontLevels.nameLevel(restored.fontScale), level);
       expect(DashboardFontLevels.clockLevel(restored.clockScale), 11 - level);
+      expect(restored.mainClockLevel, level);
     }
     expect(DashboardFontLevels.nameRatio(1.4), 2);
     expect(DashboardFontLevels.clockRatio(1.3), 1.25);
+    expect(DashboardFontLevels.mainClockRatio(1), 1);
+    expect(DashboardFontLevels.mainClockRatio(10), 3);
   });
 
   testWidgets('settings sliders expose ten choices and save independently',
@@ -455,11 +465,16 @@ void main() {
     await tester
         .pumpWidget(MaterialApp(home: SettingsScreen(controller: controller)));
     final originalClockScale = controller.settings.clockScale;
-    for (final key in ['mosque-font-level', 'clock-font-level']) {
+    for (final key in [
+      'mosque-font-level',
+      'clock-font-level',
+      'main-clock-font-level',
+    ]) {
       final finder = find.byKey(ValueKey(key));
       await tester.scrollUntilVisible(finder, 350,
           scrollable: find.byType(Scrollable).first);
       final slider = tester.widget<Slider>(finder);
+      final clockScaleBeforeChange = controller.settings.clockScale;
       expect(slider.min, 1);
       expect(slider.max, 10);
       expect(slider.divisions, 9);
@@ -472,10 +487,14 @@ void main() {
           10);
       if (key == 'mosque-font-level') {
         expect(controller.settings.clockScale, originalClockScale);
-      } else {
+      } else if (key == 'clock-font-level') {
         expect(
             DashboardFontLevels.clockLevel(repository.data.settings.clockScale),
             10);
+        expect(repository.data.settings.mainClockLevel, 1);
+      } else {
+        expect(repository.data.settings.mainClockLevel, 10);
+        expect(controller.settings.clockScale, clockScaleBeforeChange);
       }
     }
     await tester.pumpWidget(const SizedBox.shrink());
@@ -491,6 +510,7 @@ void main() {
         mosqueName: 'مسجد الرحمن',
         fontScale: 1.4,
         clockScale: 1.3,
+        mainClockLevel: 10,
         tickerScrollingEnabled: true,
       ))),
       deviceNow: () => DateTime(2026, 11, 22, 13, 27, 58),
@@ -512,7 +532,8 @@ void main() {
       double font(String text) =>
           tester.widget<Text>(find.text(text)).style!.fontSize!;
       expect(font('مسجد الرحمن'), closeTo(font('العصر') * 2, .01));
-      expect(font('1:27:58'), closeTo(font('العصر') * 1.25, .01));
+      expect(font('1:27:58'), closeTo(font('العصر') * 3, .01));
+      expect(font('الأحد'), closeTo(font('العصر') * 1.25, .01));
       final clockGroup = tester
           .getRect(find.byKey(const ValueKey('dashboard-clock-calendars')));
       final heading =

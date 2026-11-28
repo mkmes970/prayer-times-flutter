@@ -1549,7 +1549,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                        'الساعة واليوم والتقويمين — الدرجة ${DashboardFontLevels.clockLevel(controller.settings.clockScale)} من 10'),
+                        'اليوم والتقويمين فقط — الدرجة ${DashboardFontLevels.clockLevel(controller.settings.clockScale)} من 10'),
                     Slider(
                       key: const ValueKey('clock-font-level'),
                       min: 1,
@@ -1565,6 +1565,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             clockScale:
                                 DashboardFontLevels.clockScale(value.round())),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('حجم الساعة'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'أرقام الساعة فقط — الدرجة ${controller.settings.mainClockLevel} من 10',
+                    ),
+                    Slider(
+                      key: const ValueKey('main-clock-font-level'),
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      label: '${controller.settings.mainClockLevel}',
+                      value: controller.settings.mainClockLevel.toDouble(),
+                      onChanged: (value) => controller.updateSettings(
+                        controller.settings.copyWith(
+                          mainClockLevel: value.round(),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'المستوى 10 يجعل الساعة أكبر بثلاث مرات من أسماء الصلوات.',
                     ),
                   ],
                 ),

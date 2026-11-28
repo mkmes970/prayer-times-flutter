@@ -471,14 +471,16 @@ class _MainInformation extends StatelessWidget {
     final scale = DashboardFontLevels.nameRatio(controller.settings.fontScale);
     final clockScale =
         DashboardFontLevels.clockRatio(controller.settings.clockScale);
+    final mainClockRatio =
+        DashboardFontLevels.mainClockRatio(controller.settings.mainClockLevel);
     final hijri = controller.hijriDateAt(now);
     final gregorianParts = formatGregorianDate(now).split('/');
     final mq = MediaQuery.sizeOf(context);
     final prayerNameSize =
         compact ? math.min(mq.width * 0.032, mq.height * 0.066) : 30.0;
-    final clockSize = prayerNameSize * clockScale;
+    final clockSize = prayerNameSize * mainClockRatio;
     final labelSize = prayerNameSize;
-    final dateScale = clockSize / (compact ? 30.5 : 28.5);
+    final dateScale = prayerNameSize * clockScale / (compact ? 30.5 : 28.5);
 
     // This group takes its natural height and stays anchored above the timer.
     // Increasing its font size consumes space upward, never below the Hijri date.

@@ -55,6 +55,7 @@ class AppSettings {
     this.hijriAnchorDate,
     this.use24HourClock = false,
     this.clockScale = 1,
+    this.mainClockLevel = 1,
     this.fontScale = 1,
     this.systemFont = false,
     this.accentColor = 0xFF17432E,
@@ -105,6 +106,7 @@ class AppSettings {
   final String? hijriAnchorDate;
   final bool use24HourClock;
   final double clockScale;
+  final int mainClockLevel;
   final double fontScale;
   final bool systemFont;
   final int accentColor;
@@ -153,6 +155,7 @@ class AppSettings {
     bool clearHijriManualDate = false,
     bool? use24HourClock,
     double? clockScale,
+    int? mainClockLevel,
     double? fontScale,
     bool? systemFont,
     int? accentColor,
@@ -214,6 +217,7 @@ class AppSettings {
           clearHijriManualDate ? null : hijriAnchorDate ?? this.hijriAnchorDate,
       use24HourClock: false,
       clockScale: clockScale ?? this.clockScale,
+      mainClockLevel: mainClockLevel ?? this.mainClockLevel,
       fontScale: fontScale ?? this.fontScale,
       systemFont: systemFont ?? this.systemFont,
       accentColor: accentColor ?? this.accentColor,
@@ -263,6 +267,7 @@ class AppSettings {
         'hijriAnchorDate': hijriAnchorDate,
         'use24HourClock': false,
         'clockScale': clockScale,
+        'mainClockLevel': mainClockLevel,
         'fontScale': fontScale,
         'systemFont': systemFont,
         'accentColor': accentColor,
@@ -374,6 +379,7 @@ class AppSettings {
           : null,
       use24HourClock: false,
       clockScale: decimal('clockScale', 1).clamp(0.8, 1.3).toDouble(),
+      mainClockLevel: integer('mainClockLevel', 1).clamp(1, 10).toInt(),
       fontScale: decimal('fontScale', 1).clamp(0.8, 1.4).toDouble(),
       systemFont: boolean('systemFont', false),
       accentColor: integer('accentColor', 0xFF17432E),
